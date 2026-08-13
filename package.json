@@ -1,9 +1,9 @@
 {
-  "name": "markeron",
-  "version": "2.5.5",
+  "name": "annotpen",
+  "version": "1.0.0",
   "description": "轻量级屏幕标注工具 - 按下快捷键，随时在桌面上自由绘画、标注",
   "author": "ifer47 <iamajser@gmail.com>",
-  "license": "MIT",
+  "license": "暂未开源",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ifer47/markeron.git"
@@ -19,7 +19,7 @@
   },
   "packageManager": "npm@11.12.1",
   "keywords": [
-    "markeron",
+    "annotpen",
     "screen-annotation",
     "drawing",
     "tauri",
@@ -48,6 +48,7 @@
     "preinstall": "node scripts/check-node.mjs",
     "release:check": "node scripts/release.mjs check",
     "release": "node scripts/release.mjs",
+    "rebrand:scan": "node scripts/check-rebrand-scan.mjs",
     "check:node": "node scripts/check-node.mjs",
     "check:engines": "node scripts/check-lock-engines.mjs",
     "sync:sponsors": "node scripts/sync-afdian-sponsors.mjs"

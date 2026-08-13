@@ -1,14 +1,14 @@
 [package]
-name = "markeron"
-version = "2.5.5"
+name = "annotpen"
+version = "1.0.0"
 description = "轻量级屏幕标注工具"
 authors = ["ifer47"]
 repository = "https://github.com/ifer47/markeron"
-license = "MIT"
+license = "暂未开源"
 edition = "2021"
 
 [lib]
-name = "markeron_lib"
+name = "annotpen_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [build-dependencies]
@@ -35,9 +35,9 @@ xcap = "0.9"
 arboard = { version = "3", features = ["image-data"] }
 base64 = "0.22"
 image = { version = "0.25", default-features = false, features = ["png"] }
+dirs = "6"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-# Same GCD queue tao uses for setLevel / ignoresMouseEvents — keep toolbar restack ordered after those.
 dispatch2 = "0.3"
 
 [target.'cfg(target_os = "windows")'.dependencies]
