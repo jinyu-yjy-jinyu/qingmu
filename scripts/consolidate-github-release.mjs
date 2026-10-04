@@ -12,6 +12,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pipeline } from 'node:stream/promises'
 
+import { asciiAssetName } from './lib/asset-names.mjs'
+
 const [tag, mergedLatestPath] = process.argv.slice(2)
 if (!tag) {
   console.error(
@@ -122,6 +124,34 @@ try {
   } else {
     console.log(`No updater manifest supplied — skipping latest.json upload`)
   }
+
+  // GitHub silently strips non-ASCII characters from release asset names, so a
+  // Chinese productName (轻幕_1.0.1_x64-setup.exe) is stored as _1.0.1_x64-setup.exe.
+  // Re-upload such assets under a readable ASCII prefix; names that already start
+  // with an ASCII alphanumeric are left alone, so this is a no-op for ASCII builds.
+  async function normalizeAssetNames() {
+    const current = gh(['api', `repos/${repo}/releases/${primary.id}`])?.assets ?? []
+    let count = 0
+    for (const asset of current) {
+      const newName = asciiAssetName(asset.name)
+      if (!newName || newName === asset.name) continue
+      const dest = join(tmp, newName)
+      await downloadAsset(asset, dest)
+      gh(['api', '--method', 'DELETE', `repos/${repo}/releases/assets/${asset.id}`], {
+        json: false,
+      })
+      gh(['release', 'upload', tag, dest, '--clobber'], { json: false })
+      console.log(`  renamed ${asset.name} -> ${newName}`)
+      count += 1
+    }
+    console.log(
+      count === 0
+        ? `Asset names already ASCII-safe — nothing to rename`
+        : `Normalized ${count} non-ASCII asset name(s)`,
+    )
+  }
+
+  await normalizeAssetNames()
 
   console.log(`Publishing ${tag}`)
   gh(['release', 'edit', tag, '--draft=false', '--latest'], { json: false })
