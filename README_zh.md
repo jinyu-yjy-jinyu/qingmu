@@ -20,18 +20,38 @@
 
 ## 下载
 
-**Windows 64 位安装包**（v1.0.1）— 来自 [发行版页面](https://gitee.com/jinyuliaodiannao/qingmu/releases)：
+**从 [GitHub Releases](https://github.com/jinyu-yjy-jinyu/qingmu/releases) 下载**：
+
+### Windows 64 位
 
 | 格式 | 文件 | 说明 |
 | --- | --- | --- |
-| 安装向导 | `轻幕_1.0.1_x64-setup.exe` | 推荐，双击安装 |
-| MSI | `轻幕_1.0.1_x64_zh-CN.msi` | 适合企业批量部署 |
-| MSIX | `LightCurtain_1.0.1_x64.msix` | 微软商店格式 |
+| 安装向导 | `qingmu_1.0.1_x64-setup.exe` | 推荐，双击安装 |
+| MSI | `qingmu_1.0.1_x64_zh-CN.msi` | 适合企业批量部署 |
+| MSIX | `qingmu_1.0.1_x64.msix` | 微软商店格式 |
+| 便携版 | `lightcurtain_1.0.1_x64_portable.zip` | 解压即用，不写注册表 |
 
-> ⚠️ 安装包**未做代码签名**，首次运行 Windows 会提示「未知发布者」，
-> 点「更多信息」→「仍要运行」即可。
+### macOS 11+
 
-macOS / Linux 暂无预编译包，请从源码构建（见下节）。
+| 芯片 | 文件 |
+| --- | --- |
+| Apple Silicon（M 系列） | `qingmu_1.0.1_aarch64.dmg` |
+| Intel | `qingmu_1.0.1_x64.dmg` |
+
+### Linux
+
+暂无预编译包，请从源码构建（见下节）。
+
+> ⚠️ **安装包均未做代码签名**，首次运行会被系统拦一下：
+>
+> - **Windows**：提示「未知发布者」→ 点「更多信息」→「仍要运行」
+> - **macOS**：提示无法验证开发者 → **右键点应用图标 → 打开**，或到
+>   「系统设置 → 隐私与安全性」点「仍要打开」
+
+> 📝 **关于文件名**：产品名是「轻幕」，但 GitHub Release 的资产名只允许 ASCII 字符，
+> 所以文件名统一用 `qingmu_` / `lightcurtain_` 前缀。安装后的应用名、开始菜单和界面文字均为中文。
+
+> Gitee 仓库同步源码；**安装包请以 GitHub Releases 为准**。
 
 ## 从源码构建
 

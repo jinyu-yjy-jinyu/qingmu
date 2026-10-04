@@ -20,18 +20,39 @@
 
 ## Download
 
-**Windows 64-bit installers** (v1.0.1) — from the [releases page](https://gitee.com/jinyuliaodiannao/qingmu/releases):
+**Get builds from [GitHub Releases](https://github.com/jinyu-yjy-jinyu/qingmu/releases)**:
+
+### Windows 64-bit
 
 | Format | File | Notes |
 | --- | --- | --- |
-| Setup wizard | `轻幕_1.0.1_x64-setup.exe` | Recommended; double-click to install |
-| MSI | `轻幕_1.0.1_x64_zh-CN.msi` | Good for enterprise deployment |
-| MSIX | `LightCurtain_1.0.1_x64.msix` | Microsoft Store format |
+| Setup wizard | `qingmu_1.0.1_x64-setup.exe` | Recommended; double-click to install |
+| MSI | `qingmu_1.0.1_x64_zh-CN.msi` | Good for enterprise deployment |
+| MSIX | `qingmu_1.0.1_x64.msix` | Microsoft Store format |
+| Portable | `lightcurtain_1.0.1_x64_portable.zip` | Unzip and run; nothing written to the registry |
 
-> ⚠️ The installers are **not code-signed**. Windows SmartScreen will warn about an
-> unknown publisher on first run — click **More info → Run anyway**.
+### macOS 11+
 
-macOS / Linux: no prebuilt packages yet — build from source below.
+| Chip | File |
+| --- | --- |
+| Apple Silicon (M-series) | `qingmu_1.0.1_aarch64.dmg` |
+| Intel | `qingmu_1.0.1_x64.dmg` |
+
+### Linux
+
+No prebuilt packages yet — build from source below.
+
+> ⚠️ **None of the builds are code-signed**, so the OS blocks the first launch:
+>
+> - **Windows**: SmartScreen warns about an unknown publisher → **More info → Run anyway**
+> - **macOS**: Gatekeeper cannot verify the developer → **right-click the app → Open**,
+>   or allow it under **System Settings → Privacy & Security → Open Anyway**
+
+> 📝 **About the file names**: the product name is 轻幕, but GitHub release asset names may
+> only contain ASCII, so artifacts use `qingmu_` / `lightcurtain_` prefixes. The installed
+> app, Start-menu entry, and UI all remain in Chinese.
+
+> The Gitee repository mirrors the source; **downloads should come from GitHub Releases**.
 
 ## Build from source
 
