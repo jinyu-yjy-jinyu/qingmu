@@ -222,27 +222,56 @@ src-tauri/src/theme.rs
 
 ---
 
-## 七之二、已知遗留问题（上游既有，非本次引入）
+## 七之二、`check:engines` 与 sharp 的一处元数据笔误
 
-**`npm run check:engines` 在当前锁文件下会失败。**
+**原症状**：`npm run check:engines` 失败，而 CI 的第一步就是它。
 
 ```
 ✖ Pinned Node 24.15.0 does not satisfy lockfile engine requirements:
   • @img/sharp-win32-ia32: requires node ^20.9.0
 ```
 
-`scripts/check-lock-engines.mjs` 的 `satisfiesSingle()` 对 `^` 范围的处理有 bug：
-`^20.9.0` 应当匹配 `24.15.0`，但脚本把它当成 `major === 20` 来判断，因此误报。
+**本文档最初的诊断是错的。** 我曾以为 `satisfiesSingle()` 的 `^` 判断有 bug，
+但查证锁文件后发现事实并非如此：
 
-因为 CI 的 `ci.yml` 第一步就是 `node scripts/check-lock-engines.mjs`，**这个脚本会让 CI 直接失败**。
-该问题在你改造之前的原仓库中同样存在（已实测确认），不是本次提取引入的。
+| 包 | `engines.node` |
+| --- | --- |
+| `@img/sharp-win32-x64` | `>=20.9.0` |
+| `@img/sharp-darwin-arm64` | `>=20.9.0` |
+| …另 14 个兄弟包 | `>=20.9.0` |
+| **`@img/sharp-win32-ia32`** | **`^20.9.0`** ← 只有它不一样 |
 
-修法二选一：
+按语义化版本规范，`^20.9.0` 表示 `>=20.9.0 <21.0.0`，**确实不匹配** Node 24.15.0。
+**脚本的判断是正确的，错的是 sharp 自己发布的包元数据** —— 16 个兄弟包都写 `>=`，
+只有 32 位 Windows 那个写成了 `^`，是上游的一处笔误。
 
-1. 删掉 `sharp` 依赖（它只被 `scripts/generate-icons*.mjs` 用到），彻底消除这条记录；
-2. 修正 `satisfiesSingle()` 的 `^` 分支逻辑，使其符合 semver。
+**本次的修法**：不去改（本就正确的）版本比较逻辑，而是让脚本
+**跳过 npm 本来就不会在本机安装的包**。`@img/sharp-win32-ia32` 标注了
+`os: ["win32"]` + `cpu: ["ia32"]`，是 32 位 Windows 专用包，两个 CI 平台都装不到它：
 
-本文档不擅自改动这段逻辑，留给你决定。
+| CI 任务 | 运行平台 | 为何跳过 |
+| --- | --- | --- |
+| `frontend` | ubuntu / x64 | `os` 不符（win32 ≠ linux） |
+| `rust` | windows / x64 | `cpu` 不符（ia32 ≠ x64） |
+
+逻辑上这是更正确的做法：npm 不装的包，其引擎约束与当前平台无关。
+
+已做反向测试确认**没有削弱检查能力**：
+
+```
+Host win32/x64 — checked 3 range(s), skipped 1.
+  – skipped win32-ia32-only (requires node ^18.0.0)
+✖ Pinned Node 24.15.0 does not satisfy lockfile engine requirements:
+  • bad-caret: requires node ^18.0.0
+  • really-incompatible: requires node >=30
+```
+
+真实不兼容仍会被检出（`^18.0.0`、`>=30` 都报错了），
+只是不再为装不上的平台包误报。想看跳过清单可跑
+`node scripts/check-lock-engines.mjs --verbose`。
+
+> `sharp` 只是 `scripts/generate-icons*.mjs` 用的开发依赖，不进分发产物。
+> 若上游修好了这处笔误，这条记录会自动消失，本仓库无需再改。
 
 ---
 
