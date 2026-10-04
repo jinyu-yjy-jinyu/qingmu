@@ -11,15 +11,18 @@
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap uap2 uap3 uap10 desktop desktop6 rescap">
 
+  <!-- Identity/@Name and Application/@Id must be ASCII alphanumeric + . or -
+       (3-50 chars); CJK is rejected by makeappx. Display strings below stay
+       localized via DisplayName / PublisherDisplayName. -->
   <Identity
-    Name="轻幕"
+    Name="LightCurtain.Qingmu"
     Publisher="CN=1CC39F0D-AB5D-475D-87ED-F37428C133CD"
     Version="1.0.1.0"
     ProcessorArchitecture="x64" />
 
   <Properties>
     <DisplayName>轻幕</DisplayName>
-    <PublisherDisplayName>ifer</PublisherDisplayName>
+    <PublisherDisplayName>轻幕</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -32,7 +35,7 @@
   </Resources>
 
   <Applications>
-    <Application Id="轻幕"
+    <Application Id="App"
       Executable="轻幕.exe"
       EntryPoint="Windows.FullTrustApplication"
       uap10:TrustLevel="mediumIL"

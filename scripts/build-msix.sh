@@ -9,14 +9,23 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RELEASE_DIR="$ROOT/src-tauri/target/release"
-EXE="$RELEASE_DIR/轻幕.exe"
 
 VERSION=$(cd "$ROOT" && node -p "require('./package.json').version")
 MSIX_VERSION="${VERSION}.0"
 echo "==> Building MSIX for 轻幕 v${VERSION} (MSIX ${MSIX_VERSION})"
 
-if [[ ! -f "$EXE" ]]; then
-  echo "ERROR: $EXE not found. Run 'npm run build' first."
+# Tauri names the release binary after the Cargo package (lightcurtain), while the
+# bundled app and AppxManifest use productName (轻幕). Accept either source name.
+EXE=""
+for candidate in "$RELEASE_DIR/轻幕.exe" "$RELEASE_DIR/lightcurtain.exe"; do
+  if [[ -f "$candidate" ]]; then
+    EXE="$candidate"
+    break
+  fi
+done
+
+if [[ -z "$EXE" ]]; then
+  echo "ERROR: neither 轻幕.exe nor lightcurtain.exe found in $RELEASE_DIR. Run 'npm run build' first."
   exit 1
 fi
 
@@ -40,7 +49,7 @@ STAGING="$RELEASE_DIR/msix-staging"
 rm -rf "$STAGING"
 mkdir -p "$STAGING/Assets"
 
-cp "$EXE" "$STAGING/"
+cp "$EXE" "$STAGING/轻幕.exe"
 cp "$ROOT/appxmanifest.xml" "$STAGING/AppxManifest.xml"
 
 # Inject version into AppxManifest.xml (MSIX requires 4-part: Major.Minor.Patch.0)
