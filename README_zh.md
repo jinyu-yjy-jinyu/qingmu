@@ -9,18 +9,31 @@
     <a href="https://github.com/ifer47/markeron"><img src="https://img.shields.io/badge/upstream-MarkerOn%20(MIT)-0ea5e9" alt="基于 MarkerOn" /></a>
     <a href="https://tauri.app/"><img src="https://img.shields.io/badge/stack-Tauri%20v2%20·%20Vue%203%20·%20Rust-24d3c8" alt="技术栈" /></a>
   </p>
-  <p><strong>轻量级屏幕标注工具</strong>（~1.5 MB）— 按下快捷键（<strong>快捷键优先</strong>），随时在桌面上自由绘画、标注。适用于课堂演示 / 会议讲解 / 录屏批注。<strong>基于 MIT 协议开源。</strong></p>
+  <p><strong>轻量级屏幕标注工具</strong>（安装包约 6 MB）— 按下快捷键（<strong>快捷键优先</strong>），随时在桌面上自由绘画、标注。适用于课堂演示 / 会议讲解 / 录屏批注。<strong>基于 MIT 协议开源。</strong></p>
 </div>
 
 <p align="center">
   <img src="assets/hero.png" width="720" alt="轻幕" />
 </p>
 
-**目录：** [从源码构建](#从源码构建) · [快速开始](#快速开始) · [功能一览](#功能一览) · [快捷键](#快捷键一览) · [反馈](#反馈与-issue) · [开发构建](#开发构建) · [致谢与协议](#致谢与开源协议)
+**目录：** [下载](#下载) · [从源码构建](#从源码构建) · [快速开始](#快速开始) · [功能一览](#功能一览) · [快捷键](#快捷键一览) · [反馈](#反馈与-issue) · [开发构建](#开发构建) · [致谢与协议](#致谢与开源协议)
+
+## 下载
+
+**Windows 64 位安装包**（v1.0.1）— 来自 [发行版页面](https://gitee.com/jinyuliaodiannao/qingmu/releases)：
+
+| 格式 | 文件 | 说明 |
+| --- | --- | --- |
+| 安装向导 | `轻幕_1.0.1_x64-setup.exe` | 推荐，双击安装 |
+| MSI | `轻幕_1.0.1_x64_zh-CN.msi` | 适合企业批量部署 |
+| MSIX | `LightCurtain_1.0.1_x64.msix` | 微软商店格式 |
+
+> ⚠️ 安装包**未做代码签名**，首次运行 Windows 会提示「未知发布者」，
+> 点「更多信息」→「仍要运行」即可。
+
+macOS / Linux 暂无预编译包，请从源码构建（见下节）。
 
 ## 从源码构建
-
-本仓库不附带预编译安装包，请自行构建：
 
 **环境要求**
 
@@ -35,8 +48,6 @@ npm run dev              # Tauri 开发模式
 npm run build            # 生产构建
 ```
 
-上游项目 MarkerOn 的预编译安装包发布在 [ifer47/markeron](https://github.com/ifer47/markeron/releases)，那是 MarkerOn 的构建产物，并非轻幕的。
-
 ## 快速开始
 
 1. **安装并启动** — 轻幕在 **系统托盘** 静默运行，不会弹出窗口。
@@ -47,7 +58,7 @@ npm run build            # 生产构建
 
 ## 功能一览
 
-- **轻量高效** — 安装包仅 ~1.5 MB（Rust + Canvas），内存占用极低；托盘静默运行（无多余服务、无遥测）
+- **轻量高效** — 安装包约 6 MB（Rust + Canvas，不捆绑浏览器内核），内存占用极低；托盘静默运行（无多余服务、无遥测）
 - **随处标注** — 在任何应用上方绘制，覆盖全屏包括任务栏
 - **10 种工具** — 画笔、荧光笔、激光笔、箭头、矩形、椭圆、直线、橡皮擦、文字、序号
 - **灵活工具栏** — 按 <kbd>Space</kbd> 呼出，或在设置中**常驻显示**；紧凑面板，点「展开」查看完整选项，面板内可撤销、复制、切换白板；**独立浮动窗口**，含绘制 / 穿透模式切换按钮

@@ -2,7 +2,7 @@
 
 ## Intent
 
-轻幕 is a lightweight (~1.5 MB) screen annotation tool built with Tauri v2 + Vue 3. It runs in the system tray and lets users instantly draw, highlight, and annotate anywhere on the desktop via keyboard shortcuts. Targets Windows and macOS.
+轻幕 is a lightweight (~6 MB installer) screen annotation tool built with Tauri v2 + Vue 3. It runs in the system tray and lets users instantly draw, highlight, and annotate anywhere on the desktop via keyboard shortcuts. Targets Windows and macOS.
 
 It is a fork of [MarkerOn](https://github.com/ifer47/markeron) (MIT). See [NOTICE](./NOTICE) for the required upstream attribution.
 

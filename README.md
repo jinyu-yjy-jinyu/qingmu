@@ -9,18 +9,31 @@
     <a href="https://github.com/ifer47/markeron"><img src="https://img.shields.io/badge/upstream-MarkerOn%20(MIT)-0ea5e9" alt="Built on MarkerOn" /></a>
     <a href="https://tauri.app/"><img src="https://img.shields.io/badge/stack-Tauri%20v2%20·%20Vue%203%20·%20Rust-24d3c8" alt="Stack" /></a>
   </p>
-  <p><strong>Lightweight screen annotation tool</strong> (~1.5 MB) — press a hotkey (<strong>keyboard-first</strong>) to instantly draw, highlight, and annotate anywhere on your desktop. Built for demos, teaching, meetings, and screen recording. <strong>Open source under the MIT License.</strong></p>
+  <p><strong>Lightweight screen annotation tool</strong> (~6 MB installer) — press a hotkey (<strong>keyboard-first</strong>) to instantly draw, highlight, and annotate anywhere on your desktop. Built for demos, teaching, meetings, and screen recording. <strong>Open source under the MIT License.</strong></p>
 </div>
 
 <p align="center">
   <img src="assets/hero-en.png" width="720" alt="轻幕" />
 </p>
 
-**Contents:** [Build from source](#build-from-source) · [Quick Start](#quick-start) · [Features](#features) · [Shortcuts](#keyboard-shortcuts) · [Feedback](#feedback--issues) · [Development](#development) · [Credits & license](#credits--license)
+**Contents:** [Download](#download) · [Build from source](#build-from-source) · [Quick Start](#quick-start) · [Features](#features) · [Shortcuts](#keyboard-shortcuts) · [Feedback](#feedback--issues) · [Development](#development) · [Credits & license](#credits--license)
+
+## Download
+
+**Windows 64-bit installers** (v1.0.1) — from the [releases page](https://gitee.com/jinyuliaodiannao/qingmu/releases):
+
+| Format | File | Notes |
+| --- | --- | --- |
+| Setup wizard | `轻幕_1.0.1_x64-setup.exe` | Recommended; double-click to install |
+| MSI | `轻幕_1.0.1_x64_zh-CN.msi` | Good for enterprise deployment |
+| MSIX | `LightCurtain_1.0.1_x64.msix` | Microsoft Store format |
+
+> ⚠️ The installers are **not code-signed**. Windows SmartScreen will warn about an
+> unknown publisher on first run — click **More info → Run anyway**.
+
+macOS / Linux: no prebuilt packages yet — build from source below.
 
 ## Build from source
-
-轻幕 ships no prebuilt binaries in this repository. Build it yourself:
 
 **Prerequisites**
 
@@ -35,8 +48,6 @@ npm run dev              # Tauri dev app
 npm run build            # production bundle
 ```
 
-Prebuilt installers for the upstream project are published at [ifer47/markeron](https://github.com/ifer47/markeron/releases). Those are builds of MarkerOn, not of 轻幕.
-
 ## Quick Start
 
 1. **Install and launch** — 轻幕 runs in the **system tray**; no window appears.
@@ -47,7 +58,7 @@ Prebuilt installers for the upstream project are published at [ifer47/markeron](
 
 ## Features
 
-- **Lightweight & fast** — ~1.5 MB installer (Rust + Canvas), minimal memory; runs quietly in the system tray (no extra daemons or telemetry)
+- **Lightweight & fast** — ~6 MB installer (Rust + Canvas, no bundled browser engine), minimal memory; runs quietly in the system tray (no extra daemons or telemetry)
 - **Annotate anywhere** — draw over any app, including the taskbar
 - **10 tools** — pen, highlighter, laser, arrow, rectangle, ellipse, line, eraser, text, stamp
 - **Flexible toolbar** — press <kbd>Space</kbd> to toggle, or enable **always-on** in Settings; compact panel with **Expand** for full options, undo, copy, and whiteboard actions in-panel; **independent floating window** with drawing / click-through toggles
