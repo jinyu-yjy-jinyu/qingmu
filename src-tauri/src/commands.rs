@@ -314,9 +314,7 @@ pub fn raise_toolbar(app: AppHandle) {
     crate::overlay::raise_toolbar_above_overlay(&app);
 }
 
-const ALLOWED_URL_PREFIXES: &[&str] = &[
-    "https://github.com/",
-];
+const ALLOWED_URL_PREFIXES: &[&str] = &["https://github.com/"];
 
 fn is_allowed_open_url(url: &str) -> bool {
     ALLOWED_URL_PREFIXES
