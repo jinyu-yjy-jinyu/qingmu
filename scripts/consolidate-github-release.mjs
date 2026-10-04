@@ -18,7 +18,7 @@ if (!tag || !mergedLatestPath) {
   process.exit(1)
 }
 
-const repo = process.env.GH_REPO || 'yjy-jinyu-yjy/qingmu'
+const repo = process.env.GH_REPO || 'jinyu-yjy-jinyu/qingmu'
 const GH_MAX_BUFFER = 10 * 1024 * 1024
 
 function gh(args, { json = true, allowFail = false } = {}) {

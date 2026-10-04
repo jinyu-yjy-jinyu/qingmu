@@ -281,7 +281,7 @@ Host win32/x64 — checked 3 range(s), skipped 1.
 
 | 平台 | 地址 |
 | --- | --- |
-| GitHub | <https://github.com/yjy-jinyu-yjy/qingmu> |
+| GitHub | <https://github.com/jinyu-yjy-jinyu/qingmu> |
 | Gitee | <https://gitee.com/jinyuliaodiannao/qingmu> |
 
 已写入以下位置：`package.json`（repository / bugs / homepage）、
@@ -293,7 +293,7 @@ Host win32/x64 — checked 3 range(s), skipped 1.
 而是说明"本仓库不含预编译包，请自行构建"，因此不需要改。
 
 > 打开应用「设置 → 关于」时，GitHub 一栏会指向
-> `https://github.com/yjy-jinyu-yjy/qingmu`。等你 GitHub 仓库建好后即可正常跳转。
+> `https://github.com/jinyu-yjy-jinyu/qingmu`。等你 GitHub 仓库建好后即可正常跳转。
 
 另外建议：
 

@@ -6,7 +6,7 @@ import { resolvePortableMode } from '../../utils/portable'
 
 const { t } = useI18n()
 
-const REPO_URL = 'https://github.com/yjy-jinyu-yjy/qingmu'
+const REPO_URL = 'https://github.com/jinyu-yjy-jinyu/qingmu'
 const UPSTREAM_URL = 'https://github.com/ifer47/markeron'
 
 const portableMode = ref<boolean | null>(null)

@@ -3,7 +3,7 @@ name = "lightcurtain"
 version = "1.0.1"
 description = "轻量级屏幕标注工具"
 authors = ["轻幕 contributors"]
-repository = "https://github.com/yjy-jinyu-yjy/qingmu"
+repository = "https://github.com/jinyu-yjy-jinyu/qingmu"
 license = "MIT"
 edition = "2021"
 

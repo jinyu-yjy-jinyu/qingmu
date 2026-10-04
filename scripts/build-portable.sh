@@ -80,7 +80,7 @@ English
 6. To update: download a newer portable.zip and replace 轻幕.exe (keep data\\ and lightcurtain.portable).
 7. Requires Microsoft Edge WebView2 Runtime (usually preinstalled on Windows 10/11).
 
-https://github.com/yjy-jinyu-yjy/qingmu/releases
+https://github.com/jinyu-yjy-jinyu/qingmu/releases
 EOF
 
 OUTDIR="$RELEASE_DIR/bundle/portable"
