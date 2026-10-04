@@ -43,7 +43,7 @@ npm run build            # 生产构建
 2. **进入标注模式** — 按 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>（macOS 为 <kbd>Command</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>）。
 3. **绘画与穿透** — 数字键切换工具；按 <kbd>X</kbd> 可在保留标注的同时操作下层应用；按 <kbd>Esc</kbd> 退出。
 
-> **刚上手？** 按 <kbd>Space</kbd> 呼出工具栏。完整列表见 [快捷键一览](#快捷键一览)。视频教程：[B 站上手演示](https://www.bilibili.com/video/BV17ygy67ETV)。
+> **刚上手？** 按 <kbd>Space</kbd> 呼出工具栏。完整列表见 [快捷键一览](#快捷键一览)。视频教程：[B 站上手演示](https://www.bilibili.com/video/BV1fA8B6SEQz/)。
 
 ## 功能一览
 
