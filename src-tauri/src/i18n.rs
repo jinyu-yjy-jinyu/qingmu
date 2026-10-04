@@ -1,0 +1,96 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+
+pub struct Strings {
+    pub brand_name: &'static str,
+    pub settings: &'static str,
+    pub help: &'static str,
+    pub about: &'static str,
+    pub quit: &'static str,
+    pub window_title: &'static str,
+    pub tray_tooltip: &'static str,
+    pub toggle_drawing: &'static str,
+    pub clear_drawing: &'static str,
+    pub toggle_penetration: &'static str,
+    pub start_annotation_whiteboard: &'static str,
+    pub start_annotation_screen: &'static str,
+}
+
+const ZH: Strings = Strings {
+    brand_name: "轻幕",
+    settings: "设置",
+    help: "使用帮助",
+    about: "关于",
+    quit: "退出",
+    window_title: "轻幕 设置",
+    tray_tooltip: "轻幕 - 屏幕标注工具",
+    toggle_drawing: "开始标注",
+    clear_drawing: "清除标注",
+    toggle_penetration: "切换穿透模式",
+    start_annotation_whiteboard: "开始批注（白板模式）",
+    start_annotation_screen: "开始批注（屏幕标注模式）",
+};
+
+const EN: Strings = Strings {
+    brand_name: "LightCurtain",
+    settings: "Settings",
+    help: "Help",
+    about: "About",
+    quit: "Quit",
+    window_title: "LightCurtain Settings",
+    tray_tooltip: "LightCurtain - Screen annotation",
+    toggle_drawing: "Toggle annotation",
+    clear_drawing: "Clear annotations",
+    toggle_penetration: "Toggle click-through",
+    start_annotation_whiteboard: "Start annotation (whiteboard)",
+    start_annotation_screen: "Start annotation (screen)",
+};
+
+static USE_CHINESE: AtomicBool = AtomicBool::new(false);
+
+pub fn init(locale: Option<&str>) {
+    let chinese = match locale {
+        Some(l) => l.starts_with("zh"),
+        None => detect_chinese(),
+    };
+    USE_CHINESE.store(chinese, Ordering::Relaxed);
+}
+
+pub fn set_locale(locale: &str) {
+    USE_CHINESE.store(locale.starts_with("zh"), Ordering::Relaxed);
+}
+
+pub fn strings() -> &'static Strings {
+    if USE_CHINESE.load(Ordering::Relaxed) {
+        &ZH
+    } else {
+        &EN
+    }
+}
+
+fn detect_chinese() -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        let lang = std::env::var("LANG")
+            .or_else(|_| std::env::var("LANGUAGE"))
+            .unwrap_or_default();
+        if lang.starts_with("zh") {
+            return true;
+        }
+        use std::os::raw::c_int;
+        extern "system" {
+            fn GetUserDefaultUILanguage() -> u16;
+        }
+        let lang_id = unsafe { GetUserDefaultUILanguage() } as c_int;
+        let primary = lang_id & 0xFF;
+        primary == 0x04
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::env::var("LANG").unwrap_or_default().starts_with("zh")
+            || std::process::Command::new("defaults")
+                .args(["read", "-g", "AppleLanguages"])
+                .output()
+                .map(|o| String::from_utf8_lossy(&o.stdout).contains("zh"))
+                .unwrap_or(false)
+    }
+}

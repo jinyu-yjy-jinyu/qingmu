@@ -1,0 +1,73 @@
+NOTICE
+======
+
+轻幕 (qingmu)
+Copyright (c) 2026 轻幕 contributors
+Licensed under the MIT License (see ./LICENSE).
+
+This product includes software developed as part of the MarkerOn project.
+
+---------------------------------------------------------------------------
+Upstream project attribution (required by the MIT License)
+---------------------------------------------------------------------------
+
+MarkerOn — Lightweight Screen Annotation Tool
+Upstream:  https://github.com/ifer47/markeron
+Author:    ifer47 <iamajser@gmail.com>
+License:   MIT License
+
+轻幕 is a fork of MarkerOn. Large parts of this codebase — including most of
+the Rust backend (`src-tauri/src/`), most of the Vue frontend (`src/`), the
+tests, and a number of documentation and asset files — are inherited from
+MarkerOn and were originally authored by ifer47 under the MIT License.
+
+The MIT License requires that "the above copyright notice and this permission
+notice shall be included in all copies or substantial portions of the Software."
+That notice is reproduced verbatim below.
+
+---------------------------------------------------------------------------
+Verbatim upstream license notice
+---------------------------------------------------------------------------
+
+MIT License
+
+Copyright (c) 2026 MarkerOn
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---------------------------------------------------------------------------
+Asset and third-party notices
+---------------------------------------------------------------------------
+
+- Application icons and screenshots under `src-tauri/icons/`, `assets/`, and
+  `.github/assets/` are inherited from MarkerOn (MIT, © 2026 MarkerOn).
+- UI icons from Lucide are licensed under the ISC License, © Lucide Contributors.
+- The laser-pointer effect uses @excalidraw/laser-pointer (MIT).
+- The Tauri ecosystem dependencies (tauri, tauri-plugin-*) are licensed under
+  MIT OR Apache-2.0.
+- See THIRD-PARTY-LICENSES.md for the complete dependency license inventory.
+
+---------------------------------------------------------------------------
+How to comply when redistributing
+---------------------------------------------------------------------------
+
+1. Keep ./LICENSE and ./NOTICE in the root of your distribution.
+2. Do not remove or alter the "Copyright (c) 2026 MarkerOn" line.
+3. State your own changes in your release notes (not a license requirement,
+   but the customary and appreciated practice for forks).

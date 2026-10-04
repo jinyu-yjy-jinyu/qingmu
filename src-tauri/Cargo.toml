@@ -1,0 +1,58 @@
+[package]
+name = "lightcurtain"
+version = "1.0.1"
+description = "轻量级屏幕标注工具"
+authors = ["轻幕 contributors"]
+repository = "https://github.com/yjy-jinyu-yjy/qingmu"
+license = "MIT"
+edition = "2021"
+
+[lib]
+name = "lightcurtain_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "macos-private-api"] }
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri-plugin-autostart = "2.5.1"
+tauri-plugin-single-instance = "2"
+
+tauri-plugin-process = "2"
+thiserror = "2"
+tracing = "0.1"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tauri-plugin-dialog = "2"
+time = { version = "0.3", features = ["formatting", "macros"] }
+ctrlc = "3"
+xcap = "0.9"
+arboard = { version = "3", features = ["image-data"] }
+base64 = "0.22"
+image = { version = "0.25", default-features = false, features = ["png"] }
+dirs = "6"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+dispatch2 = "0.3"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+winreg = "0.55"
+windows-sys = { version = "0.59", features = [
+  "Win32_System_Registry",
+  "Win32_Foundation",
+  "Win32_UI_WindowsAndMessaging",
+  "Win32_UI_Accessibility",
+  "Win32_Graphics_Gdi",
+] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
