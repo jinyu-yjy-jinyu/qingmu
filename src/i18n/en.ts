@@ -261,6 +261,7 @@ export default {
     tagline: 'Lightweight screen annotation tool',
     author: 'Author',
     license: 'License',
+    openSource: 'Open source',
     feedback: 'Feedback',
     sponsor: 'Support development',
     checkUpdate: 'Check for updates',

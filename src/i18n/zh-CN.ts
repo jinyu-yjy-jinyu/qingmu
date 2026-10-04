@@ -256,6 +256,7 @@ export default {
     tagline: '轻量级屏幕标注工具',
     author: '作者',
     license: '开源协议',
+    openSource: '开源',
     feedback: '反馈问题',
     sponsor: '赞助开发',
     checkUpdate: '检查更新',

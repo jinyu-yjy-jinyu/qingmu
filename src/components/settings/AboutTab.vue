@@ -51,7 +51,7 @@ async function openUrl(url: string) {
         <div class="settings-card w-full overflow-hidden">
           <div class="flex items-center justify-between px-4 py-3 ui-divider-b settings-row-hover transition-colors">
             <span class="settings-text-row-key">{{ t('about.license') }}</span>
-            <span class="settings-text-value">MIT</span>
+            <span class="settings-text-value">{{ t('about.openSource') }} (MIT)</span>
           </div>
           <button
             class="w-full flex items-center justify-between px-4 py-3 ui-divider-b settings-row-hover-strong transition-colors cursor-pointer bg-transparent border-x-0 border-t-0"
@@ -96,7 +96,7 @@ async function openUrl(url: string) {
       </div>
 
       <p class="shrink-0 mt-auto pt-6 pb-1 settings-text-footer tracking-wide">
-        &copy; 2026 轻幕 contributors &middot; MIT
+        &copy; 2026 轻幕 contributors &middot; {{ t('about.openSource') }}
       </p>
       <p class="shrink-0 settings-text-footer tracking-wide">
         基于
