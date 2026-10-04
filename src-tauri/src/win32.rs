@@ -162,7 +162,8 @@ pub fn create_hicon_from_rgba(
 
     let mut bgra = rgba[..pixel_count * 4].to_vec();
     let mut and_mask = Vec::with_capacity(pixel_count);
-    for chunk in bgra.chunks_exact_mut(4) {
+    // as_chunks_mut 比 chunks_exact_mut(4) 更明确，且免去每次切片边界检查
+    for chunk in bgra.as_chunks_mut::<4>().0 {
         and_mask.push(chunk[3].wrapping_sub(u8::MAX));
         chunk.swap(0, 2); // RGBA → BGRA
     }
