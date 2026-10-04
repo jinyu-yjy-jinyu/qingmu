@@ -93,7 +93,7 @@ console.log(
 )
 
 const primaryNames = new Set(primary.assets.map((a) => a.name))
-const tmp = mkdtempSync(join(tmpdir(), 'annotpen-release-'))
+const tmp = mkdtempSync(join(tmpdir(), 'qingmu-release-'))
 
 try {
   for (const release of duplicates) {

@@ -4,9 +4,9 @@
 # Usage: bash scripts/build-portable.sh
 #
 # Layout inside the zip:
-#   AnnotPen.exe
+#   轻幕.exe
 #   WebView2Loader.dll  # required for windows-gnu toolchain builds
-#   annotpen.portable   # marker → config/logs/webview under ./data/
+#   lightcurtain.portable   # marker → config/logs/webview under ./data/
 #   README.txt
 
 set -euo pipefail
@@ -15,10 +15,10 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RELEASE_DIR="$ROOT/src-tauri/target/release"
 
 VERSION=$(cd "$ROOT" && node -p "require('./package.json').version")
-echo "==> Building portable zip for AnnotPen v${VERSION}"
+echo "==> Building portable zip for 轻幕 v${VERSION}"
 
 EXE=""
-for candidate in "$RELEASE_DIR/AnnotPen.exe" "$RELEASE_DIR/annotpen.exe"; do
+for candidate in "$RELEASE_DIR/轻幕.exe" "$RELEASE_DIR/lightcurtain.exe"; do
   if [[ -f "$candidate" ]]; then
     EXE="$candidate"
     break
@@ -26,7 +26,7 @@ for candidate in "$RELEASE_DIR/AnnotPen.exe" "$RELEASE_DIR/annotpen.exe"; do
 done
 
 if [[ -z "$EXE" ]]; then
-  echo "ERROR: AnnotPen.exe / annotpen.exe not found in $RELEASE_DIR. Run 'npm run build' first."
+  echo "ERROR: 轻幕.exe / lightcurtain.exe not found in $RELEASE_DIR. Run 'npm run build' first."
   exit 1
 fi
 
@@ -46,7 +46,7 @@ STAGING="$RELEASE_DIR/portable-staging"
 rm -rf "$STAGING"
 mkdir -p "$STAGING"
 
-cp "$EXE" "$STAGING/AnnotPen.exe"
+cp "$EXE" "$STAGING/轻幕.exe"
 if [[ -n "$WEBVIEW2_LOADER" ]]; then
   cp "$WEBVIEW2_LOADER" "$STAGING/WebView2Loader.dll"
   echo "==> Included WebView2Loader.dll from $WEBVIEW2_LOADER"
@@ -54,30 +54,30 @@ else
   echo "WARNING: WebView2Loader.dll not found — portable zip may fail on windows-gnu builds."
 fi
 # Unique marker file — presence enables portable data dir next to the exe.
-: > "$STAGING/annotpen.portable"
+: > "$STAGING/lightcurtain.portable"
 
 cat > "$STAGING/README.txt" <<EOF
-AnnotPen Portable (绿色免安装版) v${VERSION}
-========================================
+轻幕 Portable (绿色免安装版) v${VERSION}
+======================================
 
 中文
 ----
 1. 解压到任意目录（建议非 C:\\Program Files）。
-2. 双击 AnnotPen.exe 即可运行，无需安装。
+2. 双击 轻幕.exe 即可运行，无需安装。
 3. 配置、日志与 WebView 缓存写在本目录下的 data\\ 文件夹，不写系统 AppData。
-4. 请保留同目录下的 annotpen.portable 标记文件（删除后会改回写入系统目录）。
+4. 请保留同目录下的 lightcurtain.portable 标记文件（删除后会改回写入系统目录）。
 5. 迁移或备份：复制整个文件夹即可。
-6. 更新：下载新版 portable.zip，覆盖 AnnotPen.exe（可保留 data\\ 与 annotpen.portable）。
+6. 更新：下载新版 portable.zip，覆盖 轻幕.exe（可保留 data\\ 与 lightcurtain.portable）。
 7. 需要系统已安装 Microsoft Edge WebView2 Runtime（Win10/11 通常已自带）。
 
 English
 -------
 1. Extract anywhere (avoid Program Files if you want fully writable portable data).
-2. Run AnnotPen.exe — no installer.
+2. Run 轻幕.exe — no installer.
 3. Config, logs, and WebView cache live under .\\data\\ next to the exe.
-4. Keep the annotpen.portable marker file next to the exe (removing it switches back to AppData).
+4. Keep the lightcurtain.portable marker file next to the exe (removing it switches back to AppData).
 5. To move or back up: copy the whole folder.
-6. To update: download a newer portable.zip and replace AnnotPen.exe (keep data\\ and annotpen.portable).
+6. To update: download a newer portable.zip and replace 轻幕.exe (keep data\\ and lightcurtain.portable).
 7. Requires Microsoft Edge WebView2 Runtime (usually preinstalled on Windows 10/11).
 
 https://github.com/yjy-jinyu-yjy/qingmu/releases
@@ -85,7 +85,7 @@ EOF
 
 OUTDIR="$RELEASE_DIR/bundle/portable"
 mkdir -p "$OUTDIR"
-OUTPUT="$OUTDIR/AnnotPen_${VERSION}_x64_portable.zip"
+OUTPUT="$OUTDIR/lightcurtain_${VERSION}_x64_portable.zip"
 rm -f "$OUTPUT"
 
 if command -v zip >/dev/null 2>&1; then
