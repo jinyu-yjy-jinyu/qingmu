@@ -90,7 +90,8 @@ mod tests {
 
     #[test]
     fn detects_legacy_portable_marker() {
-        let dir = std::env::temp_dir().join(format!("lightcurtain-legacy-test-{}", std::process::id()));
+        let dir =
+            std::env::temp_dir().join(format!("lightcurtain-legacy-test-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
 
