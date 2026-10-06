@@ -30,17 +30,31 @@ export function writeVersion(nextVersion) {
   writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`)
 
   const cargoPath = join(ROOT, 'src-tauri/Cargo.toml')
-  writeFileSync(
-    cargoPath,
-    readFileSync(cargoPath, 'utf8').replace(/^version = ".*"$/m, `version = "${nextVersion}"`),
-  )
+  writeFileSync(cargoPath, readFileSync(cargoPath, 'utf8').replace(/^version = ".*"$/m, `version = "${nextVersion}"`))
 
   const cargoLockPath = join(ROOT, 'src-tauri/Cargo.lock')
   writeFileSync(
     cargoLockPath,
     readFileSync(cargoLockPath, 'utf8').replace(
-      /(\[\[package\]\]\nname = "markeron"\nversion = ")[^"]+(")/,
+      /(\[\[package\]\]\nname = "lightcurtain"\nversion = ")[^"]+(")/,
       `$1${nextVersion}$2`,
+    ),
+  )
+
+  // Tauri's own config drives bundle/installer file names — keep it in sync.
+  const tauriConfPath = join(ROOT, 'src-tauri/tauri.conf.json')
+  writeFileSync(
+    tauriConfPath,
+    readFileSync(tauriConfPath, 'utf8').replace(/("version":\s*")[^"]+(")/, `$1${nextVersion}$2`),
+  )
+
+  // MSIX manifest uses a 4-part version (major.minor.patch.revision).
+  const msixPath = join(ROOT, 'appxmanifest.xml')
+  writeFileSync(
+    msixPath,
+    readFileSync(msixPath, 'utf8').replace(
+      /(Version=")\d+\.\d+\.\d+\.\d+(")/,
+      `$1${nextVersion}.0$2`,
     ),
   )
 }

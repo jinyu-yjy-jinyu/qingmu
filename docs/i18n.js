@@ -1,53 +1,54 @@
-(function () {
-  const STORAGE_KEY = 'markeron-lang';
-  const SUPPORTED = ['en', 'zh-CN'];
+;(function () {
+  const STORAGE_KEY = 'annotpen-lang'
+  const LEGACY_STORAGE_KEY = 'markeron-lang'
+  const SUPPORTED = ['en', 'zh-CN']
 
   function kbdCombo(keys) {
     const keysHtml = keys
       .map((key, index) => {
-        const plus = index > 0 ? '<span class="kbd-plus" aria-hidden="true">+</span>' : '';
-        return `${plus}<kbd>${key}</kbd>`;
+        const plus = index > 0 ? '<span class="kbd-plus" aria-hidden="true">+</span>' : ''
+        return `${plus}<kbd>${key}</kbd>`
       })
-      .join('');
-    return `<span class="kbd-combo">${keysHtml}</span>`;
+      .join('')
+    return `<span class="kbd-combo">${keysHtml}</span>`
   }
 
-  const enterCombo = kbdCombo(['Ctrl', 'Shift', 'D']);
-  const enterComboMac = kbdCombo(['⌘', '⇧', 'D']);
-  const clearCombo = kbdCombo(['Ctrl', 'Shift', 'C']);
-  const clearComboMac = kbdCombo(['⌘', '⇧', 'C']);
-  const clickThroughCombo = kbdCombo(['Ctrl', 'Shift', 'X']);
-  const clickThroughComboMac = kbdCombo(['⌘', '⇧', 'X']);
-  const undoCombo = kbdCombo(['Ctrl', 'Z']);
-  const undoComboMac = kbdCombo(['⌘', 'Z']);
-  const redoCombo = kbdCombo(['Ctrl', 'Shift', 'Z']);
-  const redoComboMac = kbdCombo(['⌘', '⇧', 'Z']);
-  const copyCombo = kbdCombo(['Ctrl', 'C']);
-  const copyComboMac = kbdCombo(['⌘', 'C']);
-  const confirmCombo = kbdCombo(['Ctrl', 'Enter']);
-  const confirmComboMac = kbdCombo(['⌘', 'Return']);
+  const enterCombo = kbdCombo(['Ctrl', 'Shift', 'D'])
+  const enterComboMac = kbdCombo(['⌘', '⇧', 'D'])
+  const clearCombo = kbdCombo(['Ctrl', 'Shift', 'C'])
+  const clearComboMac = kbdCombo(['⌘', '⇧', 'C'])
+  const clickThroughCombo = kbdCombo(['Ctrl', 'Shift', 'X'])
+  const clickThroughComboMac = kbdCombo(['⌘', '⇧', 'X'])
+  const undoCombo = kbdCombo(['Ctrl', 'Z'])
+  const undoComboMac = kbdCombo(['⌘', 'Z'])
+  const redoCombo = kbdCombo(['Ctrl', 'Shift', 'Z'])
+  const redoComboMac = kbdCombo(['⌘', '⇧', 'Z'])
+  const copyCombo = kbdCombo(['Ctrl', 'C'])
+  const copyComboMac = kbdCombo(['⌘', 'C'])
+  const confirmCombo = kbdCombo(['Ctrl', 'Enter'])
+  const confirmComboMac = kbdCombo(['⌘', 'Return'])
 
   const messages = {
     en: {
-      'meta.title': 'MarkerOn - Lightweight Screen Annotation Tool',
+      'meta.title': 'AnnotPen - Lightweight Screen Annotation Tool',
       'meta.description':
-        'MarkerOn is a lightweight open-source screen annotation tool with click-through mode, whiteboard mode, and keyboard-first drawing for Windows and macOS.',
+        'AnnotPen is a lightweight open-source screen annotation tool with click-through mode, whiteboard mode, and keyboard-first drawing for Windows and macOS.',
       'meta.keywords':
         'screen annotation tool, desktop drawing overlay, click-through annotation, desktop whiteboard, Tauri app, screen drawing',
-      'meta.ogTitle': 'MarkerOn - Lightweight Screen Annotation Tool',
+      'meta.ogTitle': 'AnnotPen - Lightweight Screen Annotation Tool',
       'meta.ogDescription':
         'Draw, highlight, and annotate anywhere on your desktop. Click-through mode keeps annotations visible while you interact with apps below.',
-      'helpPage.meta.title': 'MarkerOn Help & Shortcuts',
+      'helpPage.meta.title': 'AnnotPen Help & Shortcuts',
       'helpPage.meta.description':
-        'MarkerOn keyboard shortcuts and help: global hotkeys, drawing tools, click-through mode, whiteboard, and modifier tips for Windows and macOS.',
+        'AnnotPen keyboard shortcuts and help: global hotkeys, drawing tools, click-through mode, whiteboard, and modifier tips for Windows and macOS.',
       'helpPage.meta.keywords':
-        'MarkerOn help, screen annotation shortcuts, click-through mode, whiteboard shortcuts, Ctrl+Shift+D, keyboard drawing',
-      'helpPage.meta.ogTitle': 'MarkerOn Help & Shortcuts',
+        'AnnotPen help, screen annotation shortcuts, click-through mode, whiteboard shortcuts, Ctrl+Shift+D, keyboard drawing',
+      'helpPage.meta.ogTitle': 'AnnotPen Help & Shortcuts',
       'helpPage.meta.ogDescription':
-        'Learn MarkerOn shortcuts: enter annotation, switch tools, toggle click-through, whiteboard, colors, and drag tips.',
-      'skip': 'Skip to content',
+        'Learn AnnotPen shortcuts: enter annotation, switch tools, toggle click-through, whiteboard, colors, and drag tips.',
+      skip: 'Skip to content',
       'nav.aria': 'Primary navigation',
-      'nav.brandAria': 'MarkerOn home',
+      'nav.brandAria': 'AnnotPen home',
       'nav.linksAria': 'Product links',
       'nav.features': 'Features',
       'nav.help': 'Help',
@@ -86,7 +87,7 @@
       'helpPage.quick.lead': 'From tray to first stroke in a few keys.',
       'helpPage.quick.step1Title': 'Launch',
       'helpPage.quick.step1Body':
-        'MarkerOn runs in the system tray. Launching again while it is already running toggles annotation — same as clicking the tray icon.',
+        'AnnotPen runs in the system tray. Launching again while it is already running toggles annotation — same as clicking the tray icon.',
       'helpPage.quick.step2Title': 'Enter annotation',
       'helpPage.quick.step2Body': `Press ${enterCombo} (macOS: ${enterComboMac}) to draw over any app.`,
       'helpPage.quick.step3Title': 'Stay visible, keep working',
@@ -187,7 +188,7 @@
       'helpPage.tips.toolbarTitle': 'Toolbar',
       'helpPage.tips.toolbarBody':
         'Press Space for the floating toolbar. Panel actions keep it open; canvas actions collapse it. Pin to stay visible. Pen / pointer switch drawing and click-through.',
-      'helpPage.cta.copy': 'Ready to annotate? Download MarkerOn and start with the tray shortcut.',
+      'helpPage.cta.copy': 'Ready to annotate? Download AnnotPen and start with the tray shortcut.',
       'helpPage.cta.download': 'Download Latest',
       'helpPage.cta.home': 'Back to home',
       'bottom.helpLink': 'Full shortcuts & help',
@@ -213,7 +214,7 @@
       'hero.quickStep3Desc': 'Exit',
       'hero.quickStep4Keys': '<kbd>Space</kbd>',
       'hero.quickStep4Desc': 'Toolbar',
-      'proof.aria': 'Why MarkerOn',
+      'proof.aria': 'Why AnnotPen',
       'proof.instantTitle': 'Instant',
       'proof.instantBody': `Press ${enterCombo} and start drawing over any app.`,
       'proof.unintrusiveTitle': 'Unintrusive',
@@ -232,10 +233,10 @@
         'Press <kbd>W</kbd> for a clean board, keep content between sessions, and copy as an image for docs or chats.',
       'showcase.surfaceEyebrow': 'Product surface',
       'showcase.toolsTitle': 'Annotation tools',
-      'showcase.toolsAlt': 'MarkerOn annotation tools',
+      'showcase.toolsAlt': 'AnnotPen annotation tools',
       'showcase.toolsCaption': 'Pen, highlighter, laser, arrow, shapes, eraser, text, stamp, and colors.',
       'showcase.settingsTitle': 'Settings panel',
-      'showcase.settingsAlt': 'MarkerOn settings panel',
+      'showcase.settingsAlt': 'AnnotPen settings panel',
       'showcase.settingsCaption': 'Toolbar, whiteboard, drag modes, shortcuts, and startup.',
       'showcase.demoEyebrow': 'Live demo',
       'showcase.demoTitle': 'Click-through mode',
@@ -249,7 +250,7 @@
       'shortcuts.throughKeys': clickThroughCombo,
       'shortcuts.board': 'Board',
       'bottom.eyebrow': 'Get started',
-      'bottom.title': 'Download MarkerOn or read the FAQ.',
+      'bottom.title': 'Download AnnotPen or read the FAQ.',
       'bottom.lead': 'Official installers and quick answers when comparing screen annotation tools.',
       'bottom.downloadLabel': 'Official downloads',
       'bottom.faqLabel': 'Common questions',
@@ -261,7 +262,7 @@
       'bottom.portableDesc': 'Extract and run — config stays in data\\ next to the exe',
       'bottom.sourceTitle': 'Source Code',
       'bottom.sourceDesc': 'MIT licensed on GitHub',
-      'bottom.faq1Title': 'What is MarkerOn for?',
+      'bottom.faq1Title': 'What is AnnotPen for?',
       'bottom.faq1Desc':
         'Live screen annotation for demos, teaching, and meetings — keyboard-first tools and click-through mode built in.',
       'bottom.faq2Title': 'How does click-through mode work?',
@@ -269,30 +270,26 @@
       'bottom.faq3Title': 'Account or cloud upload?',
       'bottom.faq3Desc': 'No. Local-first, open source, and account-free.',
       'footer.license':
-        '<a href="https://github.com/ifer47/markeron" translate="no">MarkerOn</a> is open source under the MIT License.',
+        '<a href="https://github.com/ifer47/markeron" translate="no">AnnotPen</a> is open source under the MIT License.',
       'footer.sponsor': 'Support development',
       'footer.feedback': 'Feedback and issues',
     },
     'zh-CN': {
-      'meta.title': 'MarkerOn - 轻量级屏幕标注工具',
+      'meta.title': '批注笔 - 轻量级屏幕标注工具',
       'meta.description':
-        'MarkerOn 是一款轻量级开源屏幕标注工具，支持穿透模式、白板模式与快捷键优先绘制，适用于 Windows 和 macOS。',
-      'meta.keywords':
-        '屏幕标注工具, 桌面标注, 穿透模式, 桌面白板, Tauri 应用, 屏幕绘画',
-      'meta.ogTitle': 'MarkerOn - 轻量级屏幕标注工具',
-      'meta.ogDescription':
-        '在桌面任意位置绘画、高亮与标注。穿透模式下标注保持可见，同时可操作下层应用。',
-      'helpPage.meta.title': 'MarkerOn 帮助与快捷键',
+        '批注笔 是一款轻量级开源屏幕标注工具，支持穿透模式、白板模式与快捷键优先绘制，适用于 Windows 和 macOS。',
+      'meta.keywords': '屏幕标注工具, 桌面标注, 穿透模式, 桌面白板, Tauri 应用, 屏幕绘画',
+      'meta.ogTitle': '批注笔 - 轻量级屏幕标注工具',
+      'meta.ogDescription': '在桌面任意位置绘画、高亮与标注。穿透模式下标注保持可见，同时可操作下层应用。',
+      'helpPage.meta.title': '批注笔 帮助与快捷键',
       'helpPage.meta.description':
-        'MarkerOn 快捷键与使用帮助：全局热键、绘画工具、穿透模式、白板与修饰键提示，适用于 Windows 和 macOS。',
-      'helpPage.meta.keywords':
-        'MarkerOn 帮助, 屏幕标注快捷键, 穿透模式, 白板快捷键, Ctrl+Shift+D, 键盘绘画',
-      'helpPage.meta.ogTitle': 'MarkerOn 帮助与快捷键',
-      'helpPage.meta.ogDescription':
-        '查阅 MarkerOn 快捷键：进入标注、切换工具、穿透模式、白板、颜色与拖拽技巧。',
-      'skip': '跳到主要内容',
+        '批注笔 快捷键与使用帮助：全局热键、绘画工具、穿透模式、白板与修饰键提示，适用于 Windows 和 macOS。',
+      'helpPage.meta.keywords': '批注笔 帮助, 屏幕标注快捷键, 穿透模式, 白板快捷键, Ctrl+Shift+D, 键盘绘画',
+      'helpPage.meta.ogTitle': '批注笔 帮助与快捷键',
+      'helpPage.meta.ogDescription': '查阅 批注笔 快捷键：进入标注、切换工具、穿透模式、白板、颜色与拖拽技巧。',
+      skip: '跳到主要内容',
       'nav.aria': '主导航',
-      'nav.brandAria': 'MarkerOn 首页',
+      'nav.brandAria': '批注笔 首页',
       'nav.linksAria': '产品链接',
       'nav.features': '功能',
       'nav.help': '帮助',
@@ -305,8 +302,7 @@
       'nav.langZh': '中文',
       'helpPage.eyebrow': '快捷键速查',
       'helpPage.title': '帮助与快捷键',
-      'helpPage.lead':
-        '面向演示与教学的快捷键优先标注。本页速查全局热键、工具、修饰键与穿透模式。',
+      'helpPage.lead': '面向演示与教学的快捷键优先标注。本页速查全局热键、工具、修饰键与穿透模式。',
       'helpPage.video': '更想看演示？观看 B 站使用教程 →',
       'helpPage.tocAria': '本页目录',
       'helpPage.toc.quick': '快速开始',
@@ -330,8 +326,7 @@
       'helpPage.quick.title': '快速开始',
       'helpPage.quick.lead': '从托盘到第一笔，只需几个按键。',
       'helpPage.quick.step1Title': '启动',
-      'helpPage.quick.step1Body':
-        'MarkerOn 在系统托盘运行。应用已在后台时再次启动会切换标注 — 与点击托盘图标相同。',
+      'helpPage.quick.step1Body': '批注笔 在系统托盘运行。应用已在后台时再次启动会切换标注 — 与点击托盘图标相同。',
       'helpPage.quick.step2Title': '进入标注',
       'helpPage.quick.step2Body': `按 ${enterCombo}（macOS：${enterComboMac}）即可在任意应用上方绘画。`,
       'helpPage.quick.step3Title': '标注可见，继续操作',
@@ -349,8 +344,7 @@
       'helpPage.global.through': '切换穿透模式',
       'helpPage.global.throughWin': clickThroughCombo,
       'helpPage.global.throughMac': clickThroughComboMac,
-      'helpPage.global.note':
-        '绘制中可按 <kbd>X</kbd> 切换穿透，或按 <kbd>Esc</kbd> 退出标注。',
+      'helpPage.global.note': '绘制中可按 <kbd>X</kbd> 切换穿透，或按 <kbd>Esc</kbd> 退出标注。',
       'helpPage.tools.eyebrow': '03',
       'helpPage.tools.title': '标注模式内工具',
       'helpPage.tools.lead': '数字键与字母快捷键切换工具，无需打开菜单。',
@@ -425,14 +419,13 @@
       'helpPage.tips.throughTitle': '穿透模式',
       'helpPage.tips.throughBody': `在工具栏切换，或按 ${clickThroughCombo}（全局）、绘制中按 <kbd>X</kbd>。标注保持可见，点击可到达下层应用。`,
       'helpPage.tips.dragTitle': '拖拽元素',
-      'helpPage.tips.dragBody':
-        '「常规」中可选：关闭、悬停拖动，或按住 Ctrl/Command 拖动。选中橡皮擦时不触发。',
+      'helpPage.tips.dragBody': '「常规」中可选：关闭、悬停拖动，或按住 Ctrl/Command 拖动。选中橡皮擦时不触发。',
       'helpPage.tips.textTitle': '编辑文字',
       'helpPage.tips.textBody': `双击文字可重新编辑；<kbd>T</kbd> 模式下双击空白处新建。确认用 ${confirmCombo}（macOS：${confirmComboMac}），或双击右键。`,
       'helpPage.tips.toolbarTitle': '工具栏',
       'helpPage.tips.toolbarBody':
         '按 Space 呼出浮动工具栏。面板内操作保持打开，画布操作后收起；可图钉固定。画笔 / 指针切换绘制与穿透。',
-      'helpPage.cta.copy': '准备好标注了？下载 MarkerOn，用托盘快捷键开始。',
+      'helpPage.cta.copy': '准备好标注了？下载 批注笔，用托盘快捷键开始。',
       'helpPage.cta.download': '下载最新版',
       'helpPage.cta.home': '返回首页',
       'bottom.helpLink': '完整快捷键与帮助',
@@ -458,7 +451,7 @@
       'hero.quickStep3Desc': '退出',
       'hero.quickStep4Keys': '<kbd>Space</kbd>',
       'hero.quickStep4Desc': '呼出工具栏',
-      'proof.aria': '为什么选择 MarkerOn',
+      'proof.aria': '为什么选择 批注笔',
       'proof.instantTitle': '即开即用',
       'proof.instantBody': `按 ${enterCombo}，即可在任意应用上方开始标注。`,
       'proof.unintrusiveTitle': '轻量无扰',
@@ -473,14 +466,13 @@
       'features.keyboardBody':
         '数字键切换工具。<kbd>Ctrl</kbd>+滚轮调整线宽。<kbd>Q</kbd>/<kbd>E</kbd> 切换颜色。复制与清空无需打开菜单。',
       'features.whiteboardTitle': '需要时使用白板',
-      'features.whiteboardBody':
-        '按 <kbd>W</kbd> 打开干净白板，内容可跨会话保留，并复制为图片用于文档或聊天。',
+      'features.whiteboardBody': '按 <kbd>W</kbd> 打开干净白板，内容可跨会话保留，并复制为图片用于文档或聊天。',
       'showcase.surfaceEyebrow': '产品界面',
       'showcase.toolsTitle': '标注工具',
-      'showcase.toolsAlt': 'MarkerOn 标注工具',
+      'showcase.toolsAlt': '批注笔 标注工具',
       'showcase.toolsCaption': '画笔、荧光笔、激光笔、箭头、形状、橡皮擦、文字、序号与颜色。',
       'showcase.settingsTitle': '设置面板',
-      'showcase.settingsAlt': 'MarkerOn 设置面板',
+      'showcase.settingsAlt': '批注笔 设置面板',
       'showcase.settingsCaption': '工具栏、白板、拖拽模式、快捷键与启动项。',
       'showcase.demoEyebrow': '动态演示',
       'showcase.demoTitle': '穿透模式',
@@ -493,7 +485,7 @@
       'shortcuts.throughKeys': clickThroughCombo,
       'shortcuts.board': '白板',
       'bottom.eyebrow': '开始使用',
-      'bottom.title': '下载 MarkerOn 或查看常见问题。',
+      'bottom.title': '下载 批注笔 或查看常见问题。',
       'bottom.lead': '官方安装包与对比屏幕标注工具时的快速解答。',
       'bottom.downloadLabel': '官方下载',
       'bottom.faqLabel': '常见问题',
@@ -505,116 +497,115 @@
       'bottom.portableDesc': '解压即用，配置保存在程序旁 data\\ 目录',
       'bottom.sourceTitle': '源代码',
       'bottom.sourceDesc': 'GitHub 开源，MIT 协议',
-      'bottom.faq1Title': 'MarkerOn 适合什么场景？',
+      'bottom.faq1Title': '批注笔 适合什么场景？',
       'bottom.faq1Desc': '演示、教学、会议与录屏时的屏幕标注，内置快捷键工具与穿透模式。',
       'bottom.faq2Title': '穿透模式怎么用？',
       'bottom.faq2Desc': `在工具栏切换，或按 ${clickThroughCombo}。标注保持可见，同时可点击、滚动并在下层应用中输入。`,
       'bottom.faq3Title': '需要账号或上传截图吗？',
       'bottom.faq3Desc': '不需要。本地优先、开源、无需账号。',
-      'footer.license':
-        '<a href="https://github.com/ifer47/markeron" translate="no">MarkerOn</a> 基于 MIT 协议开源。',
+      'footer.license': '<a href="https://github.com/ifer47/markeron" translate="no">批注笔</a> 基于 MIT 协议开源。',
       'footer.sponsor': '赞助开发',
       'footer.feedback': '反馈与 Issue',
     },
-  };
+  }
 
   function normalizeLocale(locale) {
-    if (!locale) return 'en';
-    if (locale === 'zh' || locale.startsWith('zh-')) return 'zh-CN';
-    return SUPPORTED.includes(locale) ? locale : 'en';
+    if (!locale) return 'en'
+    if (locale === 'zh' || locale.startsWith('zh-')) return 'zh-CN'
+    return SUPPORTED.includes(locale) ? locale : 'en'
   }
 
   function detectLocale() {
-    const params = new URLSearchParams(window.location.search);
-    const fromQuery = params.get('lang');
-    if (fromQuery) return normalizeLocale(fromQuery);
+    const params = new URLSearchParams(window.location.search)
+    const fromQuery = params.get('lang')
+    if (fromQuery) return normalizeLocale(fromQuery)
 
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return normalizeLocale(stored);
+    const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY)
+    if (stored) return normalizeLocale(stored)
 
-    return normalizeLocale(navigator.language || 'en');
+    return normalizeLocale(navigator.language || 'en')
   }
 
   function t(locale, key) {
-    return messages[locale]?.[key] ?? messages.en[key] ?? '';
+    return messages[locale]?.[key] ?? messages.en[key] ?? ''
   }
 
   function setMeta(name, content, attr) {
-    const selector = attr === 'property' ? `meta[property="${name}"]` : `meta[name="${name}"]`;
-    const node = document.querySelector(selector);
-    if (node) node.setAttribute('content', content);
+    const selector = attr === 'property' ? `meta[property="${name}"]` : `meta[name="${name}"]`
+    const node = document.querySelector(selector)
+    if (node) node.setAttribute('content', content)
   }
 
   function applyTextNodes(locale) {
     document.querySelectorAll('[data-i18n]').forEach((node) => {
-      const key = node.getAttribute('data-i18n');
-      node.textContent = t(locale, key);
-    });
+      const key = node.getAttribute('data-i18n')
+      node.textContent = t(locale, key)
+    })
   }
 
   function applyHtmlNodes(locale) {
     document.querySelectorAll('[data-i18n-html]').forEach((node) => {
-      const key = node.getAttribute('data-i18n-html');
-      node.innerHTML = t(locale, key);
-    });
+      const key = node.getAttribute('data-i18n-html')
+      node.innerHTML = t(locale, key)
+    })
   }
 
   function applyAriaNodes(locale) {
     document.querySelectorAll('[data-i18n-aria]').forEach((node) => {
-      const key = node.getAttribute('data-i18n-aria');
-      node.setAttribute('aria-label', t(locale, key));
-    });
+      const key = node.getAttribute('data-i18n-aria')
+      node.setAttribute('aria-label', t(locale, key))
+    })
   }
 
   function applyAltNodes(locale) {
     document.querySelectorAll('[data-i18n-alt]').forEach((node) => {
-      const key = node.getAttribute('data-i18n-alt');
-      node.setAttribute('alt', t(locale, key));
-    });
+      const key = node.getAttribute('data-i18n-alt')
+      node.setAttribute('alt', t(locale, key))
+    })
   }
 
   function updateLangSwitcher(locale) {
     document.querySelectorAll('[data-lang]').forEach((button) => {
-      const active = button.getAttribute('data-lang') === locale;
-      button.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
+      const active = button.getAttribute('data-lang') === locale
+      button.setAttribute('aria-pressed', active ? 'true' : 'false')
+    })
   }
 
   function applyLocale(locale) {
-    const normalized = normalizeLocale(locale);
-    document.documentElement.lang = normalized === 'zh-CN' ? 'zh-CN' : 'en';
-    document.documentElement.dataset.locale = normalized;
+    const normalized = normalizeLocale(locale)
+    document.documentElement.lang = normalized === 'zh-CN' ? 'zh-CN' : 'en'
+    document.documentElement.dataset.locale = normalized
 
-    const metaPrefix = document.body?.dataset?.page === 'help' ? 'helpPage.meta' : 'meta';
-    document.title = t(normalized, `${metaPrefix}.title`);
-    setMeta('description', t(normalized, `${metaPrefix}.description`));
-    setMeta('keywords', t(normalized, `${metaPrefix}.keywords`));
-    setMeta('og:title', t(normalized, `${metaPrefix}.ogTitle`), 'property');
-    setMeta('og:description', t(normalized, `${metaPrefix}.ogDescription`), 'property');
+    const metaPrefix = document.body?.dataset?.page === 'help' ? 'helpPage.meta' : 'meta'
+    document.title = t(normalized, `${metaPrefix}.title`)
+    setMeta('description', t(normalized, `${metaPrefix}.description`))
+    setMeta('keywords', t(normalized, `${metaPrefix}.keywords`))
+    setMeta('og:title', t(normalized, `${metaPrefix}.ogTitle`), 'property')
+    setMeta('og:description', t(normalized, `${metaPrefix}.ogDescription`), 'property')
 
-    applyTextNodes(normalized);
-    applyHtmlNodes(normalized);
-    applyAriaNodes(normalized);
-    applyAltNodes(normalized);
-    updateLangSwitcher(normalized);
+    applyTextNodes(normalized)
+    applyHtmlNodes(normalized)
+    applyAriaNodes(normalized)
+    applyAltNodes(normalized)
+    updateLangSwitcher(normalized)
 
-    localStorage.setItem(STORAGE_KEY, normalized);
+    localStorage.setItem(STORAGE_KEY, normalized)
   }
 
   function init() {
-    const locale = detectLocale();
-    applyLocale(locale);
+    const locale = detectLocale()
+    applyLocale(locale)
 
     document.querySelectorAll('[data-lang]').forEach((button) => {
       button.addEventListener('click', () => {
-        applyLocale(button.getAttribute('data-lang'));
-      });
-    });
+        applyLocale(button.getAttribute('data-lang'))
+      })
+    })
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', init)
   } else {
-    init();
+    init()
   }
-})();
+})()

@@ -24,7 +24,7 @@ You should receive a response within 72 hours. We will work with you to understa
 
 ## Security Measures
 
-MarkerOn is designed with security in mind:
+AnnotPen is designed with security in mind:
 
 - **No telemetry** — the app does not collect usage analytics or upload annotations
 - **Local-only config** — settings stay on disk under the OS app data directory, or under `data\` for portable builds

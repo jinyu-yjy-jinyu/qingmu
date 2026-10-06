@@ -1,12 +1,12 @@
 ---
 name: tauri-config-ipc
 description: >-
-  Extend MarkerOn settings, persisted config, or Tauri IPC commands. Use when
+  Extend AnnotPen settings, persisted config, or Tauri IPC commands. Use when
   adding config fields, new invoke commands, settings UI toggles, or changing
   config.json shape.
 ---
 
-# Tauri Config & IPC (MarkerOn)
+# Tauri Config & IPC (AnnotPen)
 
 ## Architecture
 
@@ -19,7 +19,7 @@ config.json (disk, camelCase JSON)
     ↔ Vue (invoke get_config / save_*)
 ```
 
-Config path: app config dir → `config.json` (`config::config_path`), or `{exe_dir}/data/config.json` when a `markeron.portable` marker file is next to the executable.
+Config path: app config dir → `config.json` (`config::config_path`), or `{exe_dir}/data/config.json` when an `annotpen.portable` (or legacy `markeron.portable`) marker file is next to the executable.
 
 ## Naming convention
 

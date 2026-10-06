@@ -39,13 +39,7 @@ function gh(args, { json = true, allowFail = false } = {}) {
 function listReleasesForTag(tagName) {
   const result = spawnSync(
     'gh',
-    [
-      'api',
-      `repos/${repo}/releases`,
-      '--paginate',
-      '--jq',
-      `.[] | select(.tag_name == "${tagName}")`,
-    ],
+    ['api', `repos/${repo}/releases`, '--paginate', '--jq', `.[] | select(.tag_name == "${tagName}")`],
     {
       encoding: 'utf8',
       env: process.env,
@@ -99,7 +93,7 @@ console.log(
 )
 
 const primaryNames = new Set(primary.assets.map((a) => a.name))
-const tmp = mkdtempSync(join(tmpdir(), 'markeron-release-'))
+const tmp = mkdtempSync(join(tmpdir(), 'annotpen-release-'))
 
 try {
   for (const release of duplicates) {

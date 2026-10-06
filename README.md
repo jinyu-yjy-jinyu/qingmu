@@ -1,6 +1,6 @@
 <div align="center">
-  <img src=".github/assets/icon.png" width="80" height="80" alt="MarkerOn icon" />
-  <h1>MarkerOn</h1>
+  <img src=".github/assets/icon.png" width="80" height="80" alt="轻幕 icon" />
+  <h1>轻幕</h1>
   <p>
     <a href="./README_zh.md">中文</a>
   </p>
@@ -8,18 +8,18 @@
     <a href="https://github.com/ifer47/markeron/actions/workflows/ci.yml"><img src="https://github.com/ifer47/markeron/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
     <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/github/v/tag/ifer47/markeron?label=latest&color=blue" alt="Release" /></a>
     <a href="https://github.com/ifer47/markeron/releases"><img src="https://img.shields.io/github/downloads/ifer47/markeron/total" alt="Downloads" /></a>
-    <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License" /></a>
+    <a href="./LICENSE"><img src="https://img.shields.io/badge/license-暂未开源-red" alt="License" /></a>
     <a href="https://github.com/ifer47/markeron/stargazers"><img src="https://img.shields.io/github/stars/ifer47/markeron?style=social" alt="Stars" /></a>
     <a href="https://markeron.cn/"><img src="https://img.shields.io/badge/website-docs-0ea5e9" alt="Website" /></a>
     <a href="https://www.bilibili.com/video/BV17ygy67ETV"><img src="https://img.shields.io/badge/Bilibili-tutorial(CN)-fb7299" alt="Bilibili tutorial (Chinese)" /></a>
     <a href="https://afdian.com/a/markeron"><img src="https://img.shields.io/badge/爱发电-赞助-946ce6" alt="Sponsor on 爱发电" /></a>
   </p>
-  <p><strong>Lightweight screen annotation tool</strong> (~1.5 MB) — press a hotkey (<strong>keyboard-first</strong>) to instantly draw, highlight, and annotate anywhere on your desktop. Built for demos, teaching, meetings, and screen recording.<strong>Free &amp; open source.</strong> If MarkerOn saves you time in demos, teaching, or meetings, <a href="https://afdian.com/a/markeron"><strong>sponsor on Afdian</strong></a> — every contribution helps keep the project maintained.</p>
+  <p><strong>Lightweight screen annotation tool</strong> (~1.5 MB) — press a hotkey (<strong>keyboard-first</strong>) to instantly draw, highlight, and annotate anywhere on your desktop. Built for demos, teaching, meetings, and screen recording.<strong>暂未开源。</strong> If 轻幕 saves you time in demos, teaching, or meetings, <a href="https://afdian.com/a/markeron"><strong>sponsor on Afdian</strong></a> — every contribution helps keep the project maintained.</p>
 </div>
 
 
 <p align="center">
-  <img src="assets/MarkerOn_en.png" width="720" alt="MarkerOn" />
+  <img src="assets/AnnotPen_en.png" width="720" alt="AnnotPen" />
 </p>
 
 **Contents:** [Download](#download) · [Quick Start](#quick-start) · [Features](#features) · [Shortcuts](#keyboard-shortcuts) · [Feedback](#feedback--issues) · [Development](#development)
@@ -30,7 +30,7 @@
   <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/badge/Windows-x64-0078D4?logo=windows&logoColor=white" alt="Windows" /></a>
   <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/badge/macOS-ARM64-000000?logo=apple&logoColor=white" alt="macOS ARM64" /></a>
   <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/badge/macOS-x64-666666?logo=apple&logoColor=white" alt="macOS x64" /></a>
-  <a href="https://get.microsoft.com/installer/download/9n6623x973jv?referrer=appbadge"><img src="https://img.shields.io/badge/Microsoft_Store-MarkerOn-0078D4?logo=microsoftstore&logoColor=white" alt="Microsoft Store" /></a>
+  <a href="https://get.microsoft.com/installer/download/9n6623x973jv?referrer=appbadge"><img src="https://img.shields.io/badge/Microsoft_Store-轻幕-0078D4?logo=microsoftstore&logoColor=white" alt="Microsoft Store" /></a>
 </p>
 
 **[Download Latest Release](https://github.com/ifer47/markeron/releases/latest)** — pick the installer for your platform from the assets list. Windows also ships a **portable zip** (`*_x64_portable.zip`): extract and run — config stays under `data\` next to the exe (no AppData).
@@ -45,7 +45,7 @@ winget install --id 9N6623X973JV --source msstore
 
 ## Quick Start
 
-1. **Install and launch** — MarkerOn runs in the **system tray**; no window appears.
+1. **Install and launch** — 轻幕 runs in the **system tray**; no window appears.
 2. **Enter annotation mode** — press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> (<kbd>Command</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> on macOS).
 3. **Draw, then click through** — use number keys for tools; press <kbd>X</kbd> to interact with apps below while keeping annotations visible; press <kbd>Esc</kbd> to exit.
 
@@ -66,7 +66,7 @@ winget install --id 9N6623X973JV --source msstore
 <table>
 <tr>
 <td width="50%">
-<img src="assets/annotation-tools.png" alt="MarkerOn annotation tools" />
+<img src="assets/annotation-tools.png" alt="AnnotPen annotation tools" />
 </td>
 <td width="50%">
 <img src="assets/settings-panel.png" alt="Settings panel" />

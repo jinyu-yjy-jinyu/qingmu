@@ -1,4 +1,4 @@
-# Contributing to MarkerOn
+# Contributing to AnnotPen
 
 Thank you for your interest in contributing!
 

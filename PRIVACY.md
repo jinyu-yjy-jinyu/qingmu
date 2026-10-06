@@ -2,13 +2,13 @@
 
 ## Introduction
 
-**MarkerOn** is a lightweight desktop screen annotation tool. We highly value your privacy, and this policy explains how we handle your data.
+**AnnotPen** is a lightweight desktop screen annotation tool. We highly value your privacy, and this policy explains how we handle your data.
 
 ## Data Collection and Usage
 
 ### Information We Do **Not** Collect
 
-MarkerOn explicitly commits to:
+AnnotPen explicitly commits to:
 
 * **Not** creating any unique identifiers, trackers, or similar tools
 * **Not** collecting usage statistics, performance metrics, or any user behavior information
@@ -18,7 +18,7 @@ MarkerOn explicitly commits to:
 
 ### Locally Stored Data
 
-MarkerOn only saves the following information locally:
+AnnotPen only saves the following information locally:
 
 1. **Configuration Data**
    Shortcut keys, general preferences (e.g. auto-start, drag mode), and related settings.
@@ -31,7 +31,7 @@ MarkerOn only saves the following information locally:
 
 ### Network Access
 
-MarkerOn does **not** send telemetry, crash reports, or user content to remote servers.
+AnnotPen does **not** send telemetry, crash reports, or user content to remote servers.
 
 Optional network use (installer builds only, when you choose to):
 
@@ -40,16 +40,16 @@ Optional network use (installer builds only, when you choose to):
 
 Portable builds do not use the in-app updater; update by downloading a new zip manually.
 
-MarkerOn is **local-first**: no account, no cloud sync of drawings. It is **not** a zero-network app when you use updates or open external links.
+AnnotPen is **local-first**: no account, no cloud sync of drawings. It is **not** a zero-network app when you use updates or open external links.
 
 ## Data Protection and Deletion
 
-Configuration stays on your machine. MarkerOn does not remotely sync or upload it.
+Configuration stays on your machine. AnnotPen does not remotely sync or upload it.
 To remove config for an installed build, uninstall the app (and delete leftover config folders if your OS leaves them). For portable builds, delete the app folder including `data\`.
 
 ## Permission Usage Information
 
-System permissions requested by MarkerOn are only used to implement core functions:
+System permissions requested by AnnotPen are only used to implement core functions:
 
 * **Display Overlay**: For rendering the transparent full-screen annotation layer on top of other windows
 * **Global Shortcut Keys**: For toggling annotation mode and clearing drawings from any application

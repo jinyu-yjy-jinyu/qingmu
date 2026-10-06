@@ -5,13 +5,13 @@ cask "markeron" do
   sha256 arm:   "316afc1076e43560dfb67df1ec55892e3c35b35ac08715c3e130930680b0a03c",
          intel: "d770b49125118af5316ddcfe6b12cee00b1e5129ab53b7f66aa88494a0a2adf"
 
-  url "https://github.com/ifer47/markeron/releases/download/v#{version}/MarkerOn_#{version}_#{arch}.dmg",
+  url "https://github.com/ifer47/markeron/releases/download/v#{version}/AnnotPen_#{version}_#{arch}.dmg",
       verified: "github.com/ifer47/markeron/"
-  name "MarkerOn"
+  name "AnnotPen"
   desc "Lightweight screen annotation tool with click-through mode"
   homepage "https://markeron.cn/"
 
-  app "MarkerOn.app"
+  app "AnnotPen.app"
 
   zap trash: [
     "~/Library/Application Support/com.markeron.app",

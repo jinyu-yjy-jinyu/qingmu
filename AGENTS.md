@@ -1,4 +1,4 @@
-# Agent Guide — MarkerOn
+# Agent Guide — AnnotPen
 
 Index for AI agents and contributors. Prefer these docs over guessing project conventions.
 

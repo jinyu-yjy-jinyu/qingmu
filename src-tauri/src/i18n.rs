@@ -1,6 +1,7 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
 pub struct Strings {
+    pub brand_name: &'static str,
     pub settings: &'static str,
     pub help: &'static str,
     pub about: &'static str,
@@ -10,30 +11,38 @@ pub struct Strings {
     pub toggle_drawing: &'static str,
     pub clear_drawing: &'static str,
     pub toggle_penetration: &'static str,
+    pub start_annotation_whiteboard: &'static str,
+    pub start_annotation_screen: &'static str,
 }
 
 const ZH: Strings = Strings {
+    brand_name: "轻幕",
     settings: "设置",
     help: "使用帮助",
     about: "关于",
     quit: "退出",
-    window_title: "MarkerOn 设置",
-    tray_tooltip: "MarkerOn - 屏幕标注工具",
+    window_title: "轻幕 设置",
+    tray_tooltip: "轻幕 - 屏幕标注工具",
     toggle_drawing: "开始标注",
     clear_drawing: "清除标注",
     toggle_penetration: "切换穿透模式",
+    start_annotation_whiteboard: "开始批注（白板模式）",
+    start_annotation_screen: "开始批注（屏幕标注模式）",
 };
 
 const EN: Strings = Strings {
+    brand_name: "LightCurtain",
     settings: "Settings",
     help: "Help",
     about: "About",
     quit: "Quit",
-    window_title: "MarkerOn Settings",
-    tray_tooltip: "MarkerOn - Screen annotation",
+    window_title: "LightCurtain Settings",
+    tray_tooltip: "LightCurtain - Screen annotation",
     toggle_drawing: "Toggle annotation",
     clear_drawing: "Clear annotations",
     toggle_penetration: "Toggle click-through",
+    start_annotation_whiteboard: "Start annotation (whiteboard)",
+    start_annotation_screen: "Start annotation (screen)",
 };
 
 static USE_CHINESE: AtomicBool = AtomicBool::new(false);

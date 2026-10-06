@@ -153,8 +153,10 @@ export function createKeyDownHandler(ctx: KeyboardContext, actions: KeyboardActi
       return
     }
 
-    // Toolbar popup toggle (Space) — skipped when toolbar is pinned always-on
+    // Toolbar popup toggle (Space) — skipped when toolbar is pinned always-on.
+    // Whiteboard mode: Space is the pan-hand gesture handled by DrawingOverlay.
     if (e.key === ' ') {
+      if (ctx.whiteboardMode.value) return
       if (ctx.toolbarPinned.value) return
       e.preventDefault()
       logActionEvent('toolbar popup toggled', { reason: 'keyboard' })

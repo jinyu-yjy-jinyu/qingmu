@@ -14,9 +14,44 @@ import { drawActionDirect, drawLaserTrail } from './drawingRender'
 import { normalizeTextOutline } from '../constants/textOutline'
 import { stampFontSizeFromWidth } from '../constants/stamp'
 import { isLaserTrailGone, pruneAgedLaserPoints } from '../constants/laser'
+import {
+  applyViewportTransform,
+  screenToWorld as viewportScreenToWorld,
+  worldToScreen as viewportWorldToScreen,
+  type ViewportState,
+} from './drawingViewport'
 
 export type { Tool, Point, DrawAction } from './drawingTypes'
 export type { InputPointLike } from './drawingTypes'
+export type { ViewportState }
+
+export interface DragSnapshot {
+  points: Point[]
+  index: number
+  attachedErasers: DrawAction['attachedErasers']
+  bbox: DrawAction['bbox']
+  rectHit: DrawAction['rectHit']
+  ellipseHit: DrawAction['ellipseHit']
+}
+
+export type UndoEntry =
+  | { type: 'add'; action: DrawAction }
+  | { type: 'remove'; action: DrawAction; index: number }
+  | { type: 'drag'; action: DrawAction; from: DragSnapshot; to: DragSnapshot }
+  | {
+      type: 'erase'
+      targets: { action: DrawAction; before: DrawAction['attachedErasers']; after: DrawAction['attachedErasers'] }[]
+    }
+  | { type: 'removeBatch'; removed: { action: DrawAction; index: number }[] }
+  | { type: 'clear'; actions: DrawAction[]; prevUndoStack: UndoEntry[] }
+
+/** A full snapshot of the drawing engine's mutable state for whiteboard switching. */
+export interface DrawingStateSnapshot {
+  history: DrawAction[]
+  undoStack: UndoEntry[]
+  redoStack: UndoEntry[]
+  laserStrokes: { action: DrawAction }[]
+}
 
 import type { Tool, Point, DrawAction, InputPointLike, TextOutlineStyle } from './drawingTypes'
 import {
@@ -125,26 +160,6 @@ export function useDrawing(
   function setAngleSnapStep(step: number) {
     angleSnapStep.value = step === 30 || step === 45 ? step : 15
   }
-
-  interface DragSnapshot {
-    points: Point[]
-    index: number
-    attachedErasers: DrawAction['attachedErasers']
-    bbox: DrawAction['bbox']
-    rectHit: DrawAction['rectHit']
-    ellipseHit: DrawAction['ellipseHit']
-  }
-
-  type UndoEntry =
-    | { type: 'add'; action: DrawAction }
-    | { type: 'remove'; action: DrawAction; index: number }
-    | { type: 'drag'; action: DrawAction; from: DragSnapshot; to: DragSnapshot }
-    | {
-        type: 'erase'
-        targets: { action: DrawAction; before: DrawAction['attachedErasers']; after: DrawAction['attachedErasers'] }[]
-      }
-    | { type: 'removeBatch'; removed: { action: DrawAction; index: number }[] }
-    | { type: 'clear'; actions: DrawAction[]; prevUndoStack: UndoEntry[] }
 
   function takeDragSnapshot(action: DrawAction, index: number): DragSnapshot {
     return {
@@ -275,6 +290,11 @@ export function useDrawing(
   }
   const currentAction = shallowRef<DrawAction | null>(null)
   const previewAction = shallowRef<DrawAction | null>(null)
+
+  // Viewport (pan/zoom) state — every whiteboard remembers its own viewport.
+  let viewportOffsetX = 0
+  let viewportOffsetY = 0
+  let viewportZoom = 1
 
   let cacheCanvas: HTMLCanvasElement | null = null
   let cacheCtx: CanvasRenderingContext2D | null = null
@@ -480,13 +500,16 @@ export function useDrawing(
       cacheCanvas.width = canvas.width
       cacheCanvas.height = canvas.height
       cacheCtx = cacheCanvas.getContext('2d')
-      const dpr = getEffectiveDpr()
-      if (cacheCtx) cacheCtx.scale(dpr, dpr)
       cacheValid = false
     }
 
     if (!cacheValid && cacheCtx) {
+      // Bake committed actions in world space under the current viewport transform,
+      // so the cached bitmap can be drawn 1:1 in renderHistoryFrame.
+      const dpr = getEffectiveDpr()
+      cacheCtx.setTransform(1, 0, 0, 1, 0, 0)
       cacheCtx.clearRect(0, 0, cacheCanvas.width, cacheCanvas.height)
+      applyViewportTransform(cacheCtx, getViewport(), dpr)
       for (let i = 0; i < history.length; i++) {
         if (history[i] === previewAction.value) continue
         drawActionOn(cacheCtx, history[i])
@@ -507,13 +530,18 @@ export function useDrawing(
     strokeCanvas.width = canvas.width
     strokeCanvas.height = canvas.height
     strokeCtx = strokeCanvas.getContext('2d')
-    const dpr = getEffectiveDpr()
-    if (strokeCtx) strokeCtx.scale(dpr, dpr)
+    if (strokeCtx) {
+      const dpr = getEffectiveDpr()
+      strokeCtx.setTransform(1, 0, 0, 1, 0, 0)
+      strokeCtx.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height)
+      applyViewportTransform(strokeCtx, getViewport(), dpr)
+    }
     lastBakedPtIdx = 0
   }
 
   function clearStrokeCanvas() {
     if (strokeCtx && strokeCanvas) {
+      strokeCtx.setTransform(1, 0, 0, 1, 0, 0)
       strokeCtx.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height)
     }
     lastBakedPtIdx = 0
@@ -573,7 +601,7 @@ export function useDrawing(
     const action = currentAction.value
     if (action && action.tool === 'eraser' && eraserMode.value === 'stroke' && action.points.length > 0) {
       const dpr = getEffectiveDpr()
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      applyViewportTransform(ctx, getViewport(), dpr)
       drawActionDirect(ctx, action, pathCache)
     }
 
@@ -589,17 +617,18 @@ export function useDrawing(
     const action = currentAction.value
     const preview = previewAction.value
     const dpr = getEffectiveDpr()
+    const vp = getViewport()
 
     ctx.save()
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     if (preview && useDragCanvas && dragCanvas) {
-      const drawX = Math.round((dragBboxX + dragOffsetX) * dpr)
-      const drawY = Math.round((dragBboxY + dragOffsetY) * dpr)
-      ctx.drawImage(dragCanvas, drawX, drawY)
+      const drawX = Math.round((dragBboxX + dragOffsetX - vp.offsetX) * vp.zoom * dpr)
+      const drawY = Math.round((dragBboxY + dragOffsetY - vp.offsetY) * vp.zoom * dpr)
+      ctx.drawImage(dragCanvas, drawX, drawY, dragCanvas.width * vp.zoom, dragCanvas.height * vp.zoom)
       if (laserStrokes.length > 0) {
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        applyViewportTransform(ctx, vp, dpr)
         drawLaserStrokes(ctx)
       }
       ctx.restore()
@@ -608,26 +637,26 @@ export function useDrawing(
     }
 
     if (laserStrokes.length > 0) {
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      applyViewportTransform(ctx, vp, dpr)
       drawLaserStrokes(ctx)
     }
 
     if (action && action.tool !== 'eraser') {
       if (action.tool === 'laser') {
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        applyViewportTransform(ctx, vp, dpr)
         drawLaserTrail(ctx, action.points, action.color, action.lineWidth, performance.now(), true)
       } else if (action.tool === 'pen' && strokeCanvas && action.points.length > 3) {
         ctx.drawImage(strokeCanvas, 0, 0)
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        applyViewportTransform(ctx, vp, dpr)
         drawFreehandTail(ctx, action)
       } else {
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        applyViewportTransform(ctx, vp, dpr)
         drawActionOn(ctx, action)
       }
     }
 
     if (preview) {
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      applyViewportTransform(ctx, vp, dpr)
       if (dragOffsetX !== 0 || dragOffsetY !== 0) {
         ctx.save()
         ctx.translate(dragOffsetX, dragOffsetY)
@@ -1116,10 +1145,155 @@ export function useDrawing(
   }
 
   function updateDragOffset(dx: number, dy: number) {
-    dragOffsetX = dx
-    dragOffsetY = dy
+    // Convert screen-pixel delta to world delta so dragged elements follow the
+    // pointer correctly while zoomed.
+    dragOffsetX = viewportZoom !== 0 ? dx / viewportZoom : dx
+    dragOffsetY = viewportZoom !== 0 ? dy / viewportZoom : dy
     previewDirty = true
     scheduleRender()
+  }
+
+  function setViewport(vp: ViewportState) {
+    viewportOffsetX = vp.offsetX
+    viewportOffsetY = vp.offsetY
+    viewportZoom = vp.zoom
+    invalidateCache()
+    historyDirty = true
+    previewDirty = true
+    flushRender()
+  }
+
+  function getViewport(): ViewportState {
+    return { offsetX: viewportOffsetX, offsetY: viewportOffsetY, zoom: viewportZoom }
+  }
+
+  function screenToWorld(x: number, y: number): { x: number; y: number } {
+    return viewportScreenToWorld(getViewport(), x, y)
+  }
+
+  function worldToScreen(x: number, y: number): { x: number; y: number } {
+    return viewportWorldToScreen(getViewport(), x, y)
+  }
+
+  function captureState(): DrawingStateSnapshot {
+    return {
+      history: [...history],
+      undoStack: [...undoStack],
+      redoStack: [...redoStack],
+      laserStrokes: laserStrokes.map((s) => ({ action: s.action })),
+    }
+  }
+
+  function restoreState(snapshot: DrawingStateSnapshot) {
+    history.length = 0
+    history.push(...snapshot.history)
+    undoStack.length = 0
+    undoStack.push(...snapshot.undoStack)
+    redoStack.length = 0
+    redoStack.push(...snapshot.redoStack)
+    laserStrokes.length = 0
+    for (const s of snapshot.laserStrokes) {
+      laserStrokes.push({ action: s.action })
+    }
+    historyIndexDirty = true
+    hitGridDirty = true
+    clearHitGridState()
+    invalidateCache()
+    currentAction.value = null
+    previewAction.value = null
+    useDragCanvas = false
+    dragOffsetX = 0
+    dragOffsetY = 0
+    objectEraserBatch = []
+    objectEraserRemovedSet = new Set()
+    objectEraserLastProcessedPt = 0
+    markHistoryStacksChanged()
+    markLaserChanged()
+    previewDirty = true
+    historyDirty = true
+    flushRender()
+  }
+
+  function exportContentAsDataURL(backgroundColor?: string, minWidth?: number, minHeight?: number): string | null {
+    const canvas = historyCanvasRef.value
+    if (!canvas) return null
+
+    let minX = Number.POSITIVE_INFINITY
+    let minY = Number.POSITIVE_INFINITY
+    let maxX = Number.NEGATIVE_INFINITY
+    let maxY = Number.NEGATIVE_INFINITY
+    let hasContent = false
+
+    for (let i = 0; i < history.length; i++) {
+      const bbox = history[i].bbox
+      if (!bbox) continue
+      hasContent = true
+      minX = Math.min(minX, bbox.x1)
+      minY = Math.min(minY, bbox.y1)
+      maxX = Math.max(maxX, bbox.x2)
+      maxY = Math.max(maxY, bbox.y2)
+    }
+    for (let i = 0; i < laserStrokes.length; i++) {
+      const pts = laserStrokes[i].action.points
+      for (let j = 0; j < pts.length; j++) {
+        hasContent = true
+        minX = Math.min(minX, pts[j].x)
+        minY = Math.min(minY, pts[j].y)
+        maxX = Math.max(maxX, pts[j].x)
+        maxY = Math.max(maxY, pts[j].y)
+      }
+    }
+
+    const pad = 24
+    let width: number
+    let height: number
+    let translateX = 0
+    let translateY = 0
+
+    if (hasContent) {
+      width = Math.max(1, maxX - minX + pad * 2)
+      height = Math.max(1, maxY - minY + pad * 2)
+      translateX = pad - minX
+      translateY = pad - minY
+    } else {
+      const fallbackW = minWidth && minWidth > 0 ? minWidth : window.innerWidth
+      const fallbackH = minHeight && minHeight > 0 ? minHeight : window.innerHeight
+      width = fallbackW
+      height = fallbackH
+    }
+
+    // Cap output pixel budget; downscale proportionally for very large whiteboards.
+    const MAX_EXPORT_PIXELS = 6_000_000
+    let scale = 1
+    const pixels = width * height
+    if (pixels > MAX_EXPORT_PIXELS) {
+      scale = Math.sqrt(MAX_EXPORT_PIXELS / pixels)
+      width = Math.max(1, Math.round(width * scale))
+      height = Math.max(1, Math.round(height * scale))
+    }
+
+    const exportCanvas = document.createElement('canvas')
+    exportCanvas.width = Math.max(1, Math.round(width))
+    exportCanvas.height = Math.max(1, Math.round(height))
+    const ctx = exportCanvas.getContext('2d')
+    if (!ctx) return null
+
+    if (backgroundColor) {
+      ctx.fillStyle = backgroundColor
+      ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height)
+    }
+
+    ctx.save()
+    if (scale !== 1) ctx.scale(scale, scale)
+    if (hasContent) ctx.translate(translateX, translateY)
+    for (let i = 0; i < history.length; i++) {
+      if (history[i] === previewAction.value) continue
+      drawActionOn(ctx, history[i])
+    }
+    if (laserStrokes.length > 0) drawLaserStrokes(ctx)
+    ctx.restore()
+
+    return exportCanvas.toDataURL('image/png')
   }
 
   function endDrag() {
@@ -1456,8 +1630,15 @@ export function useDrawing(
     canClear,
     clearAll,
     exportAsDataURL,
+    exportContentAsDataURL,
     hardReset,
     redrawAll,
+    setViewport,
+    getViewport,
+    screenToWorld,
+    worldToScreen,
+    captureState,
+    restoreState,
     beginDrag,
     updateDragOffset,
     endDrag,

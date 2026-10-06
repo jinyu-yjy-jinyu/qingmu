@@ -18,7 +18,7 @@ use crate::overlay;
 
 const LOG_TAIL_BYTES: u64 = 96 * 1024;
 const MAX_DIAGNOSTIC_EVENTS: usize = 500;
-const GITHUB_ISSUE_REPO: &str = "https://github.com/ifer47/markeron/issues/new";
+const GITHUB_ISSUE_REPO: &str = "";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -71,11 +71,11 @@ pub fn init_tracing(app: &AppHandle) -> AppResult<LogGuard> {
     let file_appender = tracing_appender::rolling::RollingFileAppender::new(
         tracing_appender::rolling::Rotation::DAILY,
         &logs,
-        "markeron.log",
+        "lightcurtain.log",
     );
     let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
     let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| "markeron=info".parse().unwrap());
+        .unwrap_or_else(|_| "lightcurtain=info".parse().unwrap());
 
     tracing_subscriber::registry()
         .with(env_filter)
@@ -256,7 +256,7 @@ pub fn issue_body_from_bundle(bundle: &DiagnosticBundle) -> String {
         String::new(),
         "## 环境 / Environment".to_string(),
         format!(
-            "- MarkerOn v{} ({})",
+            "- 轻幕 v{} ({})",
             bundle.app_version, bundle.app_identifier
         ),
         format!(
@@ -271,10 +271,10 @@ pub fn issue_body_from_bundle(bundle: &DiagnosticBundle) -> String {
         ),
         String::new(),
         "## 诊断包 / Diagnostics".to_string(),
-        "1. 在 MarkerOn 中：**设置 → 应用诊断 → 导出日志**，保存 JSON 文件。".to_string(),
+        "1. 在批注笔中：**设置 → 应用诊断 → 导出日志**，保存 JSON 文件。".to_string(),
         "2. 在本 Issue 编辑框中 **拖拽该 JSON 文件**（或粘贴）作为附件，再点击 Submit。".to_string(),
         String::new(),
-        "1. In MarkerOn: **Settings → Diagnostics → Export logs**, save the JSON file.".to_string(),
+        "1. In 轻幕: **Settings → Diagnostics → Export logs**, save the JSON file.".to_string(),
         "2. **Drag the JSON file** into this issue editor (or paste) as an attachment, then click Submit.".to_string(),
     ];
     if !bundle.frontend_events.is_empty() {
@@ -300,13 +300,13 @@ pub async fn export_diagnostics(
 ) -> AppResult<Option<String>> {
     let bundle = build_bundle(&app, &state, description)?;
     let default_name = format!(
-        "markeron-diagnostics-{}.json",
+        "lightcurtain-diagnostics-{}.json",
         bundle.exported_at.replace(':', "-")
     );
     let Some(path) = app
         .dialog()
         .file()
-        .set_title("MarkerOn Diagnostics")
+        .set_title(format!("{} Diagnostics", crate::i18n::strings().brand_name))
         .set_file_name(&default_name)
         .add_filter("JSON", &["json"])
         .blocking_save_file()
@@ -331,7 +331,7 @@ pub async fn open_github_issue_report(
     let bundle = build_bundle(&app, &state, description)?;
     let body = issue_body_from_bundle(&bundle);
     let url = github_issue_url(&title, &body);
-    if !url.starts_with("https://github.com/ifer47/markeron/") {
+    if !url.is_empty() {
         return Err(AppError::Other("URL not allowed".into()));
     }
     app.opener()

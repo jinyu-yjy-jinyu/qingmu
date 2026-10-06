@@ -1,4 +1,7 @@
 export default {
+  brand: {
+    name: 'LightCurtain',
+  },
   tools: {
     pen: 'Pen',
     highlighter: 'Highlighter',
@@ -64,6 +67,22 @@ export default {
     whiteboardExit: 'Exited whiteboard mode',
     whiteboardReady: 'Whiteboard is ready',
   },
+  whiteboard: {
+    newBoard: 'New board',
+    maxReached: 'Limit reached (26 boards)',
+    delete: 'Delete',
+    deleteTitle: 'Delete board',
+    deleteMessage: 'Delete board "{name}"? This cannot be undone.',
+    confirmDelete: 'Delete',
+    cancel: 'Cancel',
+    clearTitle: 'Clear board',
+    clearMessage: 'Clear all content on the current board?',
+    confirmClear: 'Clear',
+    clearCurrent: 'Clear',
+    exportPng: 'Export PNG',
+    exportSuccess: 'Exported to {path}',
+    exportFailed: 'Export failed. Please try again.',
+  },
   textBox: {
     placeholder: 'Type here...',
   },
@@ -85,6 +104,8 @@ export default {
       toggleDrawing: 'Toggle annotation',
       clearDrawing: 'Clear annotations',
       togglePenetration: 'Toggle click-through',
+      startAnnotationWhiteboard: 'Start annotation (whiteboard)',
+      startAnnotationScreen: 'Start annotation (screen)',
     },
     shortcutsSaved: 'Shortcuts saved',
     shortcutsSavedPartial: 'Saved, but could not register: {keys}',
@@ -109,7 +130,7 @@ export default {
     autoStart: 'Launch at startup',
     autoStartDesc: 'When enabled, the app runs silently in the background on system startup.',
     autoStartFailedEnable:
-      'Could not enable launch at startup. Allow MarkerOn in your system login/startup items (and any security software that may have blocked it), then try again.',
+      'Could not enable launch at startup. Allow 轻幕 in your system login/startup items (and any security software that may have blocked it), then try again.',
     autoStartFailedDisable:
       'Could not disable launch at startup. Check your system login/startup item permissions, then try again.',
     dragMode: 'Element dragging',
@@ -170,6 +191,8 @@ export default {
     thMacOS: 'macOS',
     toggleAnnotation: 'Toggle annotation',
     clearAll: 'Clear all',
+    startAnnotationWhiteboard: 'Start annotation (whiteboard)',
+    startAnnotationScreen: 'Start annotation (screen)',
     toolSwitch: 'Tools',
     thKey: 'Key',
     thTool: 'Tool',
@@ -213,6 +236,26 @@ export default {
     confirmText: 'Confirm text',
     openOnline: 'Full help',
     dragAction: 'drag',
+    whiteboardGuide: 'Whiteboard guide',
+    wbEnterExitLabel: 'Enter / exit board',
+    wbEnterExitDesc:
+      'Press <kbd class="help-kbd">W</kbd> or the <b>Whiteboard</b> toolbar button to enter; press <kbd class="help-kbd">W</kbd> or <kbd class="help-kbd">Esc</kbd> again to exit.',
+    wbTabsLabel: 'Board tabs',
+    wbTabsDesc:
+      'Tabs appear at the top (A–Z, up to 26). Click <b>+</b> to create, double-click a tab to rename, click <b>✕</b> to delete; each board keeps its own drawings.',
+    wbSwitchLabel: 'Switch boards',
+    wbSwitchDesc: 'Click a tab to switch; every board remembers its content, canvas position and zoom level.',
+    wbPanLabel: 'Pan canvas',
+    wbPanDesc: 'Hold the right mouse button and drag, or hold <kbd class="help-kbd">Space</kbd> + left-drag.',
+    wbZoomLabel: 'Zoom canvas',
+    wbZoomDesc: 'Scroll the mouse wheel to zoom (0.25× – 4×), centered on the cursor.',
+    wbClearLabel: 'Clear board',
+    wbClearDesc: 'Click the trash button in the tab bar and confirm to clear all content of the current board.',
+    wbExportLabel: 'Export PNG',
+    wbExportDesc: 'Click the export button in the tab bar to save the current board as a PNG image to your desktop.',
+    wbCopyLabel: 'Copy board',
+    wbCopyDesc:
+      '<kbd class="help-kbd">Ctrl+C</kbd> / <kbd class="help-kbd">⌘+C</kbd> copies the board content as an image, ready to paste anywhere.',
   },
   about: {
     tagline: 'Lightweight screen annotation tool',
@@ -229,31 +272,12 @@ export default {
     installAndRestart: 'Install & Restart',
     portableUpdateHint: 'Portable build: download the latest portable.zip from GitHub Releases to update.',
   },
-  diagnostics: {
-    title: 'Diagnostics',
-    intro:
-      'When something goes wrong, export a diagnostic bundle so developers can investigate without guessing. Reproduce the issue in annotation mode first, then export or open a GitHub issue.',
-    privacyNotice:
-      'Logs contain only technical data and settings — no account info, file contents, or drawing content.',
-    descriptionTitle: 'Problem description',
-    descriptionPlaceholder:
-      'Describe what happened and how to reproduce (optional). Example: repeated “Copied to clipboard” toast after each pen stroke on macOS trackpad.',
-    export: 'Export logs',
-    exporting: 'Exporting...',
-    exportSuccess: 'Saved to {path}',
-    exportFailed: 'Export failed, please try again',
-    reportGithub: 'Open GitHub issue',
-    reporting: 'Opening...',
-    issueOpened:
-      'GitHub issue page opened. Export JSON first if needed, then drag the file into the issue editor before submitting.',
-    issueFailed: 'Could not open GitHub, please try again',
-    defaultIssueTitle: 'Bug report',
-  },
+
   tray: {
     settings: 'Settings',
     help: 'Help',
     about: 'About',
     quit: 'Quit',
-    windowTitle: 'MarkerOn Settings',
+    windowTitle: 'LightCurtain Settings',
   },
 }

@@ -1,6 +1,6 @@
 <div align="center">
-  <img src=".github/assets/icon.png" width="80" height="80" alt="MarkerOn icon" />
-  <h1>MarkerOn</h1>
+  <img src=".github/assets/icon.png" width="80" height="80" alt="轻幕 icon" />
+  <h1>轻幕</h1>
   <p>
     <a href="./README.md">English</a>
   </p>
@@ -8,18 +8,18 @@
     <a href="https://github.com/ifer47/markeron/actions/workflows/ci.yml"><img src="https://github.com/ifer47/markeron/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
     <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/github/v/tag/ifer47/markeron?label=latest&color=blue" alt="Release" /></a>
     <a href="https://github.com/ifer47/markeron/releases"><img src="https://img.shields.io/github/downloads/ifer47/markeron/total" alt="Downloads" /></a>
-    <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License" /></a>
+    <a href="./LICENSE"><img src="https://img.shields.io/badge/license-暂未开源-red" alt="License" /></a>
     <a href="https://github.com/ifer47/markeron/stargazers"><img src="https://img.shields.io/github/stars/ifer47/markeron?style=social" alt="Stars" /></a>
     <a href="https://markeron.cn/"><img src="https://img.shields.io/badge/网站-文档-0ea5e9" alt="网站" /></a>
     <a href="https://www.bilibili.com/video/BV17ygy67ETV"><img src="https://img.shields.io/badge/Bilibili-使用教程-fb7299" alt="Bilibili 使用教程" /></a>
     <a href="https://afdian.com/a/markeron"><img src="https://img.shields.io/badge/爱发电-赞助-946ce6" alt="爱发电赞助" /></a>
   </p>
-  <p><strong>轻量级屏幕标注工具</strong>（~1.5 MB）— 按下快捷键（<strong>快捷键优先</strong>），随时在桌面上自由绘画、标注。适用于课堂演示 / 会议讲解 / 录屏批注。<strong>免费开源。</strong>如果 MarkerOn 在你的演示、教学或会议中帮到了你，欢迎 <a href="https://afdian.com/a/markeron"><strong>在爱发电赞助</strong></a>，每一份支持都有助于项目的持续维护。</p>
+  <p><strong>轻量级屏幕标注工具</strong>（~1.5 MB）— 按下快捷键（<strong>快捷键优先</strong>），随时在桌面上自由绘画、标注。适用于课堂演示 / 会议讲解 / 录屏批注。<strong>暂未开源。</strong>如果轻幕在你的演示、教学或会议中帮到了你，欢迎 <a href="https://afdian.com/a/markeron"><strong>在爱发电赞助</strong></a>，每一份支持都有助于项目的持续维护。</p>
 </div>
 
 
 <p align="center">
-  <img src="assets/MarkerOn.png" width="720" alt="MarkerOn" />
+  <img src="assets/AnnotPen.png" width="720" alt="批注笔" />
 </p>
 
 **目录：** [下载安装](#下载安装) · [快速开始](#快速开始) · [功能一览](#功能一览) · [快捷键](#快捷键一览) · [反馈](#反馈与-issue) · [开发构建](#开发构建)
@@ -30,7 +30,7 @@
   <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/badge/Windows-x64-0078D4?logo=windows&logoColor=white" alt="Windows" /></a>
   <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/badge/macOS-ARM64-000000?logo=apple&logoColor=white" alt="macOS ARM64" /></a>
   <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/badge/macOS-x64-666666?logo=apple&logoColor=white" alt="macOS x64" /></a>
-  <a href="https://get.microsoft.com/installer/download/9n6623x973jv?referrer=appbadge"><img src="https://img.shields.io/badge/微软商店-MarkerOn-0078D4?logo=microsoftstore&logoColor=white" alt="Microsoft Store" /></a>
+  <a href="https://get.microsoft.com/installer/download/9n6623x973jv?referrer=appbadge"><img src="https://img.shields.io/badge/微软商店-轻幕-0078D4?logo=microsoftstore&logoColor=white" alt="Microsoft Store" /></a>
 </p>
 
 **[下载最新版本](https://github.com/ifer47/markeron/releases/latest)** — 在 Assets 列表中选择对应平台的安装包下载。Windows 另提供 **绿色免安装版**（`*_x64_portable.zip`）：解压即用，配置写在程序目录下的 `data\`，不写系统 AppData。
@@ -45,7 +45,7 @@ winget install --id 9N6623X973JV --source msstore
 
 ## 快速开始
 
-1. **安装并启动** — MarkerOn 在 **系统托盘** 静默运行，不会弹出窗口。
+1. **安装并启动** — 轻幕在 **系统托盘** 静默运行，不会弹出窗口。
 2. **进入标注模式** — 按 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>（macOS 为 <kbd>Command</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>）。
 3. **绘画与穿透** — 数字键切换工具；按 <kbd>X</kbd> 可在保留标注的同时操作下层应用；按 <kbd>Esc</kbd> 退出。
 
@@ -66,7 +66,7 @@ winget install --id 9N6623X973JV --source msstore
 <table>
 <tr>
 <td width="50%">
-<img src="assets/十种标注工具.png" alt="MarkerOn 标注工具" />
+<img src="assets/十种标注工具.png" alt="批注笔 标注工具" />
 </td>
 <td width="50%">
 <img src="assets/设置面板.png" alt="设置面板" />

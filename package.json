@@ -1,17 +1,17 @@
 {
-  "name": "annotpen",
-  "version": "1.0.0",
+  "name": "轻幕",
+  "version": "1.0.2",
   "description": "轻量级屏幕标注工具 - 按下快捷键，随时在桌面上自由绘画、标注",
   "author": "ifer47 <iamajser@gmail.com>",
   "license": "暂未开源",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ifer47/markeron.git"
+    "url": ""
   },
   "bugs": {
-    "url": "https://github.com/ifer47/markeron/issues"
+    "url": ""
   },
-  "homepage": "https://markeron.cn/",
+  "homepage": "",
   "private": true,
   "engines": {
     "node": "24.15.0",
@@ -19,7 +19,7 @@
   },
   "packageManager": "npm@11.12.1",
   "keywords": [
-    "annotpen",
+    "轻幕",
     "screen-annotation",
     "drawing",
     "tauri",
@@ -74,10 +74,12 @@
     "@vitejs/plugin-vue": "^6.0.6",
     "czg": "^1.12.0",
     "husky": "^9.1.7",
+    "icojs": "^1.0.0",
     "jsdom": "^29.1.1",
     "lint-staged": "^16.4.0",
     "oxlint": "^1.60.0",
     "prettier": "^3.8.3",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.2.2",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
@@ -89,7 +91,6 @@
     "@excalidraw/laser-pointer": "^1.3.2",
     "@tauri-apps/plugin-autostart": "^2.5.1",
     "@tauri-apps/plugin-dialog": "^2.6.0",
-    "@tauri-apps/plugin-process": "^2.3.1",
-    "@tauri-apps/plugin-updater": "^2.10.1"
+    "@tauri-apps/plugin-process": "^2.3.1"
   }
 }

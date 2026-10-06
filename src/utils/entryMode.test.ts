@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolveDefaultEntryMode, shouldClearWhiteboardOnEntry } from './entryMode'
+import { resolveDefaultEntryMode, resolveEntryMode, shouldClearWhiteboardOnEntry } from './entryMode'
 
 describe('entryMode', () => {
   it('defaults to screen overlay', () => {
@@ -8,6 +8,21 @@ describe('entryMode', () => {
 
   it('reads explicit defaultEntryMode', () => {
     expect(resolveDefaultEntryMode({ defaultEntryMode: 'whiteboard' })).toBe('whiteboard')
+  })
+})
+
+describe('resolveEntryMode', () => {
+  it('pending whiteboard request wins over screen default', () => {
+    expect(resolveEntryMode('whiteboard', 'screen')).toBe('whiteboard')
+  })
+
+  it('pending screen request wins over whiteboard default', () => {
+    expect(resolveEntryMode('screen', 'whiteboard')).toBe('screen')
+  })
+
+  it('falls back to defaultEntryMode when no pending request', () => {
+    expect(resolveEntryMode(null, 'screen')).toBe('screen')
+    expect(resolveEntryMode(null, 'whiteboard')).toBe('whiteboard')
   })
 })
 

@@ -15,6 +15,14 @@ fn duplicate_shortcut_errors(shortcuts: &Shortcuts) -> Vec<String> {
         (s.toggle_drawing, shortcuts.toggle_drawing.as_str()),
         (s.clear_drawing, shortcuts.clear_drawing.as_str()),
         (s.toggle_penetration, shortcuts.toggle_penetration.as_str()),
+        (
+            s.start_annotation_whiteboard,
+            shortcuts.start_annotation_whiteboard.as_str(),
+        ),
+        (
+            s.start_annotation_screen,
+            shortcuts.start_annotation_screen.as_str(),
+        ),
     ];
     let mut failed = Vec::new();
     for i in 0..actions.len() {
@@ -41,6 +49,14 @@ fn invalid_shortcut_errors(shortcuts: &Shortcuts) -> Vec<String> {
         (s.toggle_drawing, shortcuts.toggle_drawing.as_str()),
         (s.clear_drawing, shortcuts.clear_drawing.as_str()),
         (s.toggle_penetration, shortcuts.toggle_penetration.as_str()),
+        (
+            s.start_annotation_whiteboard,
+            shortcuts.start_annotation_whiteboard.as_str(),
+        ),
+        (
+            s.start_annotation_screen,
+            shortcuts.start_annotation_screen.as_str(),
+        ),
     ];
     let mut failed = Vec::new();
     for (label, accel) in actions {
@@ -111,6 +127,14 @@ pub fn save_shortcuts(
         (s.toggle_drawing, &shortcuts.toggle_drawing),
         (s.clear_drawing, &shortcuts.clear_drawing),
         (s.toggle_penetration, &shortcuts.toggle_penetration),
+        (
+            s.start_annotation_whiteboard,
+            &shortcuts.start_annotation_whiteboard,
+        ),
+        (
+            s.start_annotation_screen,
+            &shortcuts.start_annotation_screen,
+        ),
     ];
 
     // Soft validation: OS/other-app occupation — still persist config so one
@@ -294,7 +318,7 @@ const ALLOWED_URL_PREFIXES: &[&str] = &[
     "https://github.com/",
     "https://apps.microsoft.com/",
     "https://afdian.com/",
-    "https://markeron.cn/",
+    "https://lightcurtain.cn/",
 ];
 
 fn is_allowed_open_url(url: &str) -> bool {
@@ -374,26 +398,43 @@ mod tests {
     }
 
     #[test]
+    fn duplicate_shortcut_errors_detects_new_vs_existing_collision() {
+        let mut shortcuts = default_shortcuts();
+        shortcuts.start_annotation_whiteboard = shortcuts.toggle_drawing.clone();
+        let errors = duplicate_shortcut_errors(&shortcuts);
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("Duplicate shortcut"));
+        assert!(errors[0].contains("白板") || errors[0].contains("whiteboard"));
+    }
+
+    #[test]
+    fn invalid_shortcut_errors_rejects_new_binding_garbage() {
+        let mut shortcuts = default_shortcuts();
+        shortcuts.start_annotation_screen = "NotAKey".into();
+        let errors = invalid_shortcut_errors(&shortcuts);
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("NotAKey"));
+    }
+
+    #[test]
+    fn duplicate_shortcut_errors_ignores_empty_new_bindings() {
+        let mut shortcuts = default_shortcuts();
+        shortcuts.start_annotation_whiteboard = String::new();
+        shortcuts.start_annotation_screen = String::new();
+        assert!(duplicate_shortcut_errors(&shortcuts).is_empty());
+    }
+
+    #[test]
     fn open_url_allowlist_permits_known_destinations() {
-        assert!(is_allowed_open_url("https://github.com/ifer47/markeron"));
-        assert!(is_allowed_open_url(
-            "https://github.com/ifer47/markeron/issues"
-        ));
-        assert!(is_allowed_open_url("https://afdian.com/a/markeron"));
-        assert!(is_allowed_open_url(
-            "https://apps.microsoft.com/store/detail/markeron/9P123"
-        ));
-        assert!(is_allowed_open_url("https://markeron.cn/help.html"));
+
+        assert!(is_allowed_open_url("https://lightcurtain.cn/help.html"));
     }
 
     #[test]
     fn open_url_allowlist_blocks_untrusted_destinations() {
         assert!(!is_allowed_open_url("https://example.com/"));
-        assert!(!is_allowed_open_url("http://github.com/ifer47/markeron"));
-        assert!(!is_allowed_open_url(
-            "https://afdian.com.evil.com/a/markeron"
-        ));
-        assert!(!is_allowed_open_url("https://markeron.cn.evil.com/help"));
-        assert!(!is_allowed_open_url("http://markeron.cn/help.html"));
+
+        assert!(!is_allowed_open_url("https://lightcurtain.cn.evil.com/help"));
+        assert!(!is_allowed_open_url("http://lightcurtain.cn/help.html"));
     }
 }

@@ -8,7 +8,7 @@ alwaysApply: false
 
 ## Mandatory command
 
-When releasing MarkerOn, **only** use:
+When releasing AnnotPen, **only** use:
 
 ```bash
 npm run release patch   # bug fixes (most common)
@@ -30,13 +30,13 @@ Pre-check only: `npm run release:check`
 
 Daily commits must follow Conventional Commits — use `npm run commit`:
 
-| Prefix | Release section |
-|--------|-----------------|
-| `feat:` | ✨ New |
-| `fix:` / `hotfix:` | 🛠 Fixes |
-| `docs:` | 📚 Documentation |
-| `ci:` / `build:` | 👷 CI |
-| other | 🧹 Improvements |
+| Prefix             | Release section  |
+| ------------------ | ---------------- |
+| `feat:`            | ✨ New           |
+| `fix:` / `hotfix:` | 🛠 Fixes         |
+| `docs:`            | 📚 Documentation |
+| `ci:` / `build:`   | 👷 CI            |
+| other              | 🧹 Improvements  |
 
 ## Config files (do not duplicate logic elsewhere)
 

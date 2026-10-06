@@ -1,12 +1,14 @@
 import { reactive } from 'vue'
 import zhCN from './zh-CN'
 import en from './en'
+import { migrateLegacyStorageKeys, readStoredWithLegacy } from '../utils/rebrandStorage'
 
 type Messages = typeof zhCN
 
 const messages: Record<string, Messages> = { 'zh-CN': zhCN, en }
 
-const LOCALE_KEY = 'markeron-locale'
+const LOCALE_KEY = 'lightcurtain-locale'
+const LEGACY_LOCALE_KEY = 'annotpen-locale'
 
 function tryGetStorage(key: string): string | null {
   try {
@@ -16,12 +18,22 @@ function tryGetStorage(key: string): string | null {
   }
 }
 
+function readLocale(): string | null {
+  const saved = readStoredWithLegacy(LOCALE_KEY)
+  if (saved) return saved
+  return tryGetStorage(LEGACY_LOCALE_KEY)
+}
+
 function detectLocale(): string {
-  const saved = tryGetStorage(LOCALE_KEY)
+  const saved = readLocale()
   if (saved && saved in messages) return saved
   const nav = navigator.language
   if (nav.startsWith('zh')) return 'zh-CN'
   return 'en'
+}
+
+if (typeof window !== 'undefined') {
+  migrateLegacyStorageKeys()
 }
 
 const state = reactive({
@@ -37,7 +49,7 @@ if (typeof window !== 'undefined') {
 }
 
 export function syncLocaleFromConfig(configLocale?: string) {
-  if (configLocale && configLocale in messages && !tryGetStorage(LOCALE_KEY)) {
+  if (configLocale && configLocale in messages && !readLocale()) {
     state.locale = configLocale
   }
 }

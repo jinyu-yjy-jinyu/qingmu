@@ -46,11 +46,11 @@ const jobs = [
   },
   {
     html: 'scene0-hero-en.html',
-    outs: ['assets/MarkerOn_en.png', 'docs/assets/hero.png'],
+    outs: ['assets/AnnotPen_en.png', 'docs/assets/hero.png'],
   },
   {
     html: 'scene0-hero.html',
-    outs: ['assets/MarkerOn.png'],
+    outs: ['assets/AnnotPen.png'],
   },
 ]
 

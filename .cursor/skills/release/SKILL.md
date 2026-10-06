@@ -1,10 +1,10 @@
 ---
 description: >-
-  MarkerOn release workflow. Use when the user asks to release, publish, bump
+  AnnotPen release workflow. Use when the user asks to release, publish, bump
   version, create a tag, or cut a new version. Never release manually.
 ---
 
-# MarkerOn Release
+# AnnotPen Release
 
 ## Single entry point
 

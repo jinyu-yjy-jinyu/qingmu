@@ -6,27 +6,27 @@ Status: published in Scoop Extras.
 - Initial inclusion: https://github.com/ScoopInstaller/Extras/pull/18304
 - Install after adding Extras: `scoop bucket add extras && scoop install markeron`
 
-The upstream manifest currently extracts the signed Windows installer and stores normal MarkerOn configuration outside the Scoop version directory. Switching it to the new portable zip would enable a cleaner archive install but would also change configuration behavior for existing Scoop users. Do not change that packaging path without a migration plan and `persist` testing.
+The upstream manifest currently extracts the signed Windows installer and stores normal AnnotPen configuration outside the Scoop version directory. Switching it to the new portable zip would enable a cleaner archive install but would also change configuration behavior for existing Scoop users. Do not change that packaging path without a migration plan and `persist` testing.
 
 Scoop is strongest when the app has a portable `.zip` release that can be extracted into Scoop's app directory without running a traditional installer.
 
 Windows GitHub Release assets include:
 
-- `MarkerOn_X.Y.Z_x64-setup.exe` (NSIS)
-- `MarkerOn_X.Y.Z_x64_zh-CN.msi`
-- `MarkerOn_X.Y.Z_x64.msix`
-- `MarkerOn_X.Y.Z_x64_portable.zip` (green / portable)
+- `AnnotPen_X.Y.Z_x64-setup.exe` (NSIS)
+- `AnnotPen_X.Y.Z_x64_zh-CN.msi`
+- `AnnotPen_X.Y.Z_x64.msix`
+- `AnnotPen_X.Y.Z_x64_portable.zip` (green / portable)
 
 Portable zip contents:
 
-- `MarkerOn.exe`
+- `AnnotPen.exe`
 - `WebView2Loader.dll` (required for windows-gnu builds)
-- `markeron.portable` marker file (config / logs / WebView data → `./data/`)
+- `annotpen.portable` marker file (config / logs / WebView data → `./data/`)
 - `README.txt`
 
 Portable-build reference for future maintenance:
 
-1. Use `MarkerOn_X.Y.Z_x64_portable.zip` only after migration behavior is agreed.
+1. Use `AnnotPen_X.Y.Z_x64_portable.zip` only after migration behavior is agreed.
 2. Add `persist` for `data` so portable configuration survives Scoop upgrades.
 3. Test migration from an existing installer-based Scoop install.
 
@@ -37,4 +37,4 @@ Draft metadata:
 - Homepage: `https://markeron.cn/`
 - License: `MIT`
 - Architecture: `64bit`
-- Bin/shortcut target: `MarkerOn.exe`
+- Bin/shortcut target: `AnnotPen.exe`

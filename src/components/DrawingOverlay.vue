@@ -4,6 +4,15 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen, emit, type UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useDrawing, type Tool, type DrawAction } from '../composables/useDrawing'
+import { useWhiteboardManager, MAX_BOARDS, type WhiteboardEntry } from '../composables/useWhiteboardManager'
+import WhiteboardTabBar from './whiteboard/WhiteboardTabBar.vue'
+import WhiteboardConfirmDialog from './whiteboard/WhiteboardConfirmDialog.vue'
+import {
+  computeZoomFromWheel,
+  computeOffsetForAnchorZoom,
+  createDefaultViewport,
+  type ViewportState,
+} from '../composables/drawingViewport'
 import type { TextOutlineStyle } from '../composables/drawingTypes'
 import { useTooltip } from '../composables/useTooltip'
 import {
@@ -55,7 +64,13 @@ import { isMacOS, MAC_HIDDEN_CURSOR, setMacOverlaySystemCursorHidden } from '../
 import { canStartElementDrag as canStartElementDragGate } from '../utils/dragInteraction'
 import { isDragEnabled, resolveDragMode, type DragMode } from '../utils/dragMode'
 import { isToolbarPinned, resolveToolbarVisibility, type ToolbarVisibility } from '../utils/toolbarSettings'
-import { resolveDefaultEntryMode, shouldClearWhiteboardOnEntry, type DefaultEntryMode } from '../utils/entryMode'
+import {
+  resolveDefaultEntryMode,
+  resolveEntryMode,
+  shouldClearWhiteboardOnEntry,
+  type AnnotationModeRequest,
+  type DefaultEntryMode,
+} from '../utils/entryMode'
 import { logDiagnostic, logSessionEvent, logActionEvent } from '../utils/diagnosticEvents'
 import type { MonitorLogicalBounds } from '../utils/toolbarPosition'
 import { toolbarPopupScreenPosition } from '../utils/toolbarPosition'
@@ -95,6 +110,8 @@ const mousePos = ref({ x: 0, y: 0 })
 const textBoxPos = ref<{ x: number; y: number } | null>(null)
 const whiteboardMode = ref(false)
 const defaultEntryMode = ref<DefaultEntryMode>('screen')
+/** Pending annotation-mode request from a global shortcut, consumed on hidden→drawing activation. */
+const pendingAnnotationMode = ref<AnnotationModeRequest | null>(null)
 
 const toolLabelMap = computed<Record<Tool, string>>(() => ({
   pen: t('tools.pen'),
@@ -252,6 +269,14 @@ function onContextMenu(e: MouseEvent) {
 }
 
 function onWheel(e: WheelEvent) {
+  if (whiteboardMode.value && !e.ctrlKey) {
+    e.preventDefault()
+    const vp = getViewport()
+    const nextZoom = computeZoomFromWheel(vp.zoom, e.deltaY)
+    if (nextZoom === vp.zoom) return
+    setViewport(computeOffsetForAnchorZoom(vp, e.clientX, e.clientY, nextZoom))
+    return
+  }
   if (!active.value || !e.ctrlKey) return
   e.preventDefault()
   const tool = currentTool.value
@@ -299,13 +324,181 @@ const {
   canClear,
   clearAll,
   exportAsDataURL,
+  exportContentAsDataURL,
   hardReset,
   redrawAll,
+  setViewport,
+  getViewport,
+  screenToWorld,
+  worldToScreen,
+  captureState,
+  restoreState,
   beginDrag,
   updateDragOffset,
   endDrag,
   destroy,
 } = useDrawing(historyCanvasRef, previewCanvasRef)
+
+const whiteboardManager = useWhiteboardManager({
+  onSwitch: (board) => {
+    restoreBoardIntoDrawing(board)
+    logActionEvent('whiteboard switched', { name: board.name, letter: board.letter })
+  },
+  onDirty: () => {
+    syncOverlayStateToToolbar()
+  },
+})
+
+type WhiteboardConfirmState = { kind: 'delete'; id: string } | { kind: 'clear' } | null
+const whiteboardConfirm = ref<WhiteboardConfirmState>(null)
+
+const whiteboardConfirmText = computed(() => {
+  if (!whiteboardConfirm.value) return null
+  const c = whiteboardConfirm.value
+  if (c.kind === 'delete') {
+    const board = whiteboardManager.getBoard(c.id)
+    return {
+      title: t('whiteboard.deleteTitle'),
+      message: t('whiteboard.deleteMessage', { name: board?.name ?? '' }),
+      confirmText: t('whiteboard.confirmDelete'),
+      cancelText: t('whiteboard.cancel'),
+    }
+  }
+  return {
+    title: t('whiteboard.clearTitle'),
+    message: t('whiteboard.clearMessage'),
+    confirmText: t('whiteboard.confirmClear'),
+    cancelText: t('whiteboard.cancel'),
+  }
+})
+
+/** Convert screen CSS pixels to whiteboard world coordinates (identity outside whiteboard mode). */
+function toWorld(x: number, y: number): { x: number; y: number } {
+  return screenToWorld(x, y)
+}
+
+function saveCurrentWhiteboard() {
+  const board = whiteboardManager.current.value
+  if (!board) return
+  whiteboardManager.saveCurrent(captureState(), getViewport())
+}
+
+function restoreBoardIntoDrawing(board: WhiteboardEntry | null) {
+  if (!board) return
+  setViewport(board.viewport)
+  if (board.drawingState) {
+    restoreState(board.drawingState)
+  } else {
+    hardReset()
+  }
+}
+
+function switchBoard(id: string) {
+  if (id === whiteboardManager.currentId.value) return
+  saveCurrentWhiteboard()
+  whiteboardManager.selectBoard(id)
+}
+
+function handleWhiteboardCreate() {
+  saveCurrentWhiteboard()
+  if (!whiteboardManager.createBoard()) {
+    showTip(t('whiteboard.maxReached'))
+  }
+}
+
+function handleWhiteboardDeleteRequest(id: string) {
+  if (!whiteboardManager.getBoard(id)) return
+  whiteboardConfirm.value = { kind: 'delete', id }
+}
+
+function confirmWhiteboardDelete() {
+  const state = whiteboardConfirm.value
+  if (!state || state.kind !== 'delete') return
+  saveCurrentWhiteboard()
+  whiteboardManager.deleteBoard(state.id)
+  whiteboardConfirm.value = null
+}
+
+function handleWhiteboardRename(id: string, name: string) {
+  whiteboardManager.renameBoard(id, name)
+  logActionEvent('whiteboard renamed', { id, name })
+}
+
+function requestClearCurrentWhiteboard() {
+  whiteboardConfirm.value = { kind: 'clear' }
+}
+
+function confirmClearCurrentWhiteboard() {
+  whiteboardConfirm.value = null
+  if (isDrawing.value || isDragging || capturedPointerId !== null) {
+    finishActivePointerInteraction()
+  }
+  clearAll()
+  logActionEvent('canvas cleared', { reason: 'whiteboard-clear-current' })
+}
+
+function handleConfirmDialog() {
+  const state = whiteboardConfirm.value
+  if (!state) return
+  if (state.kind === 'delete') {
+    confirmWhiteboardDelete()
+  } else {
+    confirmClearCurrentWhiteboard()
+  }
+}
+
+async function exportWhiteboardPng() {
+  const board = whiteboardManager.current.value
+  if (!board) return
+  const dataUrl = exportContentAsDataURL('#FFFFFF', window.innerWidth, window.innerHeight)
+  if (!dataUrl) return
+  try {
+    const path = await invoke<string>('save_whiteboard_png', { dataUrl, fileName: board.name })
+    logActionEvent('whiteboard exported', { path })
+    showTip(t('whiteboard.exportSuccess', { path }))
+  } catch (err) {
+    console.error('Export whiteboard PNG failed:', err)
+    logActionEvent('whiteboard export failed', { error: String(err) }, 'error')
+    showTip(t('whiteboard.exportFailed'))
+  }
+}
+
+const panGesture = ref<{ startX: number; startY: number; baseVp: ViewportState } | null>(null)
+const panSpaceHeld = ref(false)
+
+function beginPan(e: PointerEvent) {
+  if (panGesture.value) return
+  panGesture.value = { startX: e.clientX, startY: e.clientY, baseVp: getViewport() }
+  capturePointer(e)
+  hideToolbarPopupForCanvasInteraction()
+}
+
+function updatePan(e: PointerEvent) {
+  const pan = panGesture.value
+  if (!pan) return
+  setViewport({
+    ...pan.baseVp,
+    offsetX: pan.baseVp.offsetX + (e.clientX - pan.startX),
+    offsetY: pan.baseVp.offsetY + (e.clientY - pan.startY),
+  })
+}
+
+function finishPan(e?: PointerEvent): boolean {
+  if (!panGesture.value) return false
+  if (e && capturedPointerId !== null && e.pointerId !== capturedPointerId) return false
+  releaseCapturedPointer()
+  panGesture.value = null
+  resetPointerGestureState()
+  markPointerInteractionEnded()
+  return true
+}
+
+function cancelPan() {
+  if (!panGesture.value) return
+  releaseCapturedPointer()
+  panGesture.value = null
+  markPointerInteractionEnded()
+}
 
 const textFontSize = computed(() => Math.max(16, lineWidth.value * 6))
 const eraserCursorDiameter = computed(() => Math.min(80, eraserLineWidth(lineWidth.value)))
@@ -454,9 +647,10 @@ async function persistLineWidths() {
   }
 }
 
-function applyDefaultEntryOnActivate() {
-  if (defaultEntryMode.value === 'whiteboard') {
-    void enterWhiteboardMode({ fromDefaultEntry: true })
+function applyDefaultEntryOnActivate(pending: AnnotationModeRequest | null = null) {
+  const entry = resolveEntryMode(pending, defaultEntryMode.value)
+  if (entry === 'whiteboard') {
+    void enterWhiteboardMode({ fromDefaultEntry: pending === null })
   } else {
     whiteboardMode.value = false
     void syncWhiteboardMode(false)
@@ -474,16 +668,20 @@ async function syncWhiteboardMode(active: boolean) {
 async function enterWhiteboardMode(options?: { fromDefaultEntry?: boolean }) {
   if (whiteboardMode.value) return
   await resumeDrawingFromToolbar()
-  if (
-    shouldClearWhiteboardOnEntry({
-      whiteboardPreserveDrawings: whiteboardPreserveDrawings.value,
-      preserveDrawings: preserveDrawings.value,
-      fromDefaultEntry: options?.fromDefaultEntry ?? false,
-      hasDrawings: canClear.value,
-    })
-  ) {
-    hardReset()
-    logActionEvent('canvas hard reset', { reason: 'whiteboard-entry' })
+  whiteboardManager.ensureInitialBoard()
+  const shouldClear = shouldClearWhiteboardOnEntry({
+    whiteboardPreserveDrawings: whiteboardPreserveDrawings.value,
+    preserveDrawings: preserveDrawings.value,
+    fromDefaultEntry: options?.fromDefaultEntry ?? false,
+    hasDrawings: canClear.value,
+  })
+  const board = whiteboardManager.current.value
+  if (board?.drawingState && !shouldClear) {
+    restoreBoardIntoDrawing(board)
+  } else if (shouldClear) {
+    clearAll()
+    logActionEvent('canvas cleared', { reason: 'whiteboard-entry' })
+    saveCurrentWhiteboard()
   }
   whiteboardMode.value = true
   showQuickColors.value = false
@@ -498,14 +696,18 @@ async function enterWhiteboardMode(options?: { fromDefaultEntry?: boolean }) {
 
 function exitWhiteboardMode() {
   if (!whiteboardMode.value) return
+  if (whiteboardPreserveDrawings.value) {
+    saveCurrentWhiteboard()
+  }
   whiteboardMode.value = false
   void syncWhiteboardMode(false)
+  hardReset()
+  if (!whiteboardPreserveDrawings.value) {
+    saveCurrentWhiteboard()
+  }
   showQuickColors.value = false
   textBoxPos.value = null
-  if (!whiteboardPreserveDrawings.value) {
-    hardReset()
-    logActionEvent('canvas hard reset', { reason: 'whiteboard-exit' })
-  }
+  setViewport(createDefaultViewport())
   logSessionEvent('whiteboard exited')
   showTip(t('overlay.whiteboardExit'))
 }
@@ -798,15 +1000,8 @@ function commitCurrentTextBox(cancel = false) {
       const text = textBoxRef.value.getText()
       const actualFs = textBoxRef.value.getFontSize()
       if (text.trim()) {
-        addTextAction(
-          text,
-          textBoxPos.value.x,
-          textBoxPos.value.y,
-          0,
-          actualFs,
-          activeTextBoxColor.value,
-          activeTextBoxOutline.value,
-        )
+        const world = toWorld(textBoxPos.value.x, textBoxPos.value.y)
+        addTextAction(text, world.x, world.y, 0, actualFs, activeTextBoxColor.value, activeTextBoxOutline.value)
       }
     }
     textBoxPos.value = null
@@ -833,7 +1028,7 @@ function onDoubleClick(e: MouseEvent) {
   if (penetrationMode.value || showQuickColors.value) return
 
   const pos = { x: e.clientX, y: e.clientY }
-  const clickedActionInfo = findActionAt(pos)
+  const clickedActionInfo = findActionAt(toWorld(pos.x, pos.y))
 
   if (clickedActionInfo && clickedActionInfo.action.tool === 'text') {
     hideToolbarPopupForCanvasInteraction()
@@ -854,7 +1049,8 @@ function onDoubleClick(e: MouseEvent) {
     currentTool.value = 'text'
 
     nextTick(() => {
-      textBoxPos.value = { x: action.points[0].x, y: action.points[0].y }
+      const screenPos = worldToScreen(action.points[0].x, action.points[0].y)
+      textBoxPos.value = { x: screenPos.x, y: screenPos.y }
     })
   } else if (currentTool.value === 'text') {
     // In text mode, double-click on empty area to create new text
@@ -905,6 +1101,7 @@ function finishActivePointerInteraction() {
     cancelAnimationFrame(hoverRafId)
     hoverRafId = null
   }
+  finishPan()
   resetRmbEraseGesture()
   releaseCapturedPointer()
   if (isDragging) {
@@ -925,6 +1122,16 @@ function finishActivePointerInteraction() {
 }
 
 async function onPointerDown(e: PointerEvent) {
+  if (whiteboardMode.value) {
+    if (e.button === 2) {
+      beginPan(e)
+      return
+    }
+    if (e.button === 0 && panSpaceHeld.value) {
+      beginPan(e)
+      return
+    }
+  }
   if (e.button === 2) {
     onRmbPointerDown(e)
     return
@@ -977,7 +1184,8 @@ async function onPointerDown(e: PointerEvent) {
   // Stamp: single click places the next number/letter badge
   if (currentTool.value === 'stamp') {
     hideToolbarPopupForCanvasInteraction()
-    placeStampAt(e.clientX, e.clientY)
+    const world = toWorld(e.clientX, e.clientY)
+    placeStampAt(world.x, world.y)
     return
   }
 
@@ -998,7 +1206,8 @@ async function onPointerDown(e: PointerEvent) {
   }
 
   capturePointer(e)
-  startDraw({ x: e.clientX, y: e.clientY })
+  const startWorld = toWorld(e.clientX, e.clientY)
+  startDraw(startWorld)
 }
 
 function onPointerMove(e: PointerEvent) {
@@ -1017,6 +1226,11 @@ function onPointerMove(e: PointerEvent) {
   pointerModDown.value = modDown(e)
   if (!isMacOS() && !toolbarPanelHovered.value) {
     updateCursorEl(e.clientX, e.clientY)
+  }
+
+  if (panGesture.value) {
+    updatePan(e)
+    return
   }
 
   if (isDragging) {
@@ -1045,7 +1259,8 @@ function onPointerMove(e: PointerEvent) {
             !textBoxPos.value &&
             isDragEnabled(dragMode.value)
           ) {
-            hoveredActionInfo.value = findActionAt(mousePos.value)
+            const world = toWorld(mousePos.value.x, mousePos.value.y)
+            hoveredActionInfo.value = findActionAt(world)
           }
         })
       }
@@ -1059,13 +1274,21 @@ function onPointerMove(e: PointerEvent) {
 
   const coalesced = e.getCoalescedEvents?.()
   if (coalesced && coalesced.length > 0) {
-    drawBatch(coalesced, isPerfect)
+    drawBatch(
+      coalesced.map((p) => {
+        const w = toWorld(p.clientX, p.clientY)
+        return { x: w.x, y: w.y }
+      }),
+      isPerfect,
+    )
   } else {
-    draw({ x: e.clientX, y: e.clientY }, isPerfect)
+    const world = toWorld(e.clientX, e.clientY)
+    draw(world, isPerfect)
   }
 }
 
 function onPointerUp(e: PointerEvent) {
+  if (finishPan(e)) return
   if (finishRmbErasePointerUp(e)) return
   if (capturedPointerId !== null && e.pointerId !== capturedPointerId) return
   // Text-tool / commit-textbox clicks invalidate the copy modifier on pointerdown but
@@ -1109,6 +1332,7 @@ function abortActivePointerInteraction() {
     cancelAnimationFrame(hoverRafId)
     hoverRafId = null
   }
+  cancelPan()
   resetRmbEraseGesture()
   releaseCapturedPointer()
   if (isDragging) {
@@ -1254,12 +1478,16 @@ const wantsCustomCursor = computed(
     !toolbarPanelHovered.value &&
     !toolbarPanelDragging.value &&
     !showDragCursor.value &&
+    !panGesture.value &&
+    !(whiteboardMode.value && panSpaceHeld.value) &&
     currentTool.value !== 'text' &&
     currentTool.value !== 'stamp',
 )
 
 // Use system cursor as fallback whenever the SVG overlay cursor is suppressed.
 const canvasCursor = computed(() => {
+  if (panGesture.value) return 'grabbing'
+  if (whiteboardMode.value && panSpaceHeld.value) return 'grab'
   if (penetrationMode.value) return 'default'
   if (showDragCursor.value) return 'move'
   if (currentTool.value === 'text') return 'text'
@@ -1475,6 +1703,22 @@ function onKeyUp(e: KeyboardEvent) {
   }
 }
 
+function onWhiteboardSpaceKeyDown(e: KeyboardEvent) {
+  if (!whiteboardMode.value || !active.value) return
+  if (e.key === ' ' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault()
+    panSpaceHeld.value = true
+  }
+}
+
+function onWhiteboardSpaceKeyUp(e: KeyboardEvent) {
+  if (e.key !== ' ') return
+  panSpaceHeld.value = false
+  if (panGesture.value) {
+    finishPan()
+  }
+}
+
 const unlisteners: UnlistenFn[] = []
 let currentTheme: ThemePreference = 'dark'
 let stopThemeWatch: (() => void) | null = null
@@ -1489,7 +1733,9 @@ onMounted(async () => {
   window.addEventListener('resize', debouncedResize)
   window.addEventListener('keydown', syncPointerModFromKey)
   window.addEventListener('keydown', onKeyDown)
+  window.addEventListener('keydown', onWhiteboardSpaceKeyDown)
   window.addEventListener('keyup', onKeyUp)
+  window.addEventListener('keyup', onWhiteboardSpaceKeyUp)
   watchDpr()
 
   const overlayWindow = getCurrentWindow()
@@ -1569,15 +1815,28 @@ onMounted(async () => {
       textBoxPos.value = null
       if (mode === 'hidden') {
         flushPersistLineWidths()
-        whiteboardMode.value = false
-        void syncWhiteboardMode(false)
+        if (whiteboardMode.value) {
+          if (whiteboardPreserveDrawings.value) {
+            saveCurrentWhiteboard()
+          }
+          whiteboardMode.value = false
+          void syncWhiteboardMode(false)
+          hardReset()
+          if (!whiteboardPreserveDrawings.value) {
+            saveCurrentWhiteboard()
+          }
+          logActionEvent('canvas hard reset', { reason: 'exit-drawing' })
+        } else {
+          whiteboardMode.value = false
+          void syncWhiteboardMode(false)
+          if (!preserveDrawings.value) {
+            hardReset()
+            logActionEvent('canvas hard reset', { reason: 'exit-drawing' })
+          }
+        }
         toolbarPanelHovered.value = false
         toolbarPanelDragging.value = false
         showToolbarPopup.value = false
-        if (!preserveDrawings.value) {
-          hardReset()
-          logActionEvent('canvas hard reset', { reason: 'exit-drawing' })
-        }
       } else if (mode === 'drawing') {
         toolbarPanelHovered.value = false
         toolbarPanelDragging.value = false
@@ -1586,7 +1845,9 @@ onMounted(async () => {
         }
         if (previousMode === 'hidden') {
           currentTool.value = 'pen'
-          applyDefaultEntryOnActivate()
+          const pending = pendingAnnotationMode.value
+          pendingAnnotationMode.value = null
+          applyDefaultEntryOnActivate(pending)
         }
         void (async () => {
           await scheduleOverlayResize()
@@ -1601,6 +1862,23 @@ onMounted(async () => {
         void syncOpenToolbarPopupWindow()
       }
       syncOverlayStateToToolbar()
+    }),
+  )
+
+  unlisteners.push(
+    await listen<AnnotationModeRequest>('annotation-mode-request', (event) => {
+      const target = event.payload
+      const matched = target === 'whiteboard' ? whiteboardMode.value : !whiteboardMode.value
+      if (lastOverlayMode === 'drawing' && matched) return
+      if (lastOverlayMode !== 'drawing') {
+        pendingAnnotationMode.value = target
+        return
+      }
+      if (target === 'whiteboard') {
+        void enterWhiteboardMode()
+      } else {
+        exitWhiteboardMode()
+      }
     }),
   )
 
@@ -1686,7 +1964,9 @@ onUnmounted(() => {
   dprMediaQuery = null
   window.removeEventListener('keydown', syncPointerModFromKey)
   window.removeEventListener('keydown', onKeyDown)
+  window.removeEventListener('keydown', onWhiteboardSpaceKeyDown)
   window.removeEventListener('keyup', onKeyUp)
+  window.removeEventListener('keyup', onWhiteboardSpaceKeyUp)
   if (hoverRafId !== null) {
     cancelAnimationFrame(hoverRafId)
     hoverRafId = null
@@ -1764,7 +2044,7 @@ async function copyWhiteboard(reason = 'unknown') {
     logDiagnostic('copy', 'copyWhiteboard skipped', { reason, cause: 'already-copying' }, 'warn')
     return
   }
-  const dataUrl = exportAsDataURL('#FFFFFF')
+  const dataUrl = exportContentAsDataURL('#FFFFFF', window.innerWidth, window.innerHeight)
   if (!dataUrl) {
     logDiagnostic('copy', 'copyWhiteboard skipped', { reason, cause: 'empty-canvas' }, 'warn')
     return
@@ -2026,6 +2306,35 @@ function exitDrawing(reason: 'keyboard' | 'toolbar' | 'unknown' = 'unknown') {
       </svg>
     </div>
 
+    <div
+      v-if="active && whiteboardMode && !hideUiForCapture"
+      class="whiteboard-tabbar-host"
+      @pointerdown.stop
+      @wheel.stop
+    >
+      <WhiteboardTabBar
+        :boards="whiteboardManager.boards.value"
+        :current-id="whiteboardManager.currentId.value"
+        :can-create="whiteboardManager.boards.value.length < MAX_BOARDS"
+        @select="switchBoard"
+        @create="handleWhiteboardCreate"
+        @request-delete="handleWhiteboardDeleteRequest"
+        @rename="handleWhiteboardRename"
+        @clear-current="requestClearCurrentWhiteboard"
+        @export-png="exportWhiteboardPng"
+      />
+    </div>
+
+    <WhiteboardConfirmDialog
+      v-if="active && whiteboardConfirmText && !hideUiForCapture"
+      :title="whiteboardConfirmText.title"
+      :message="whiteboardConfirmText.message"
+      :confirm-text="whiteboardConfirmText.confirmText"
+      :cancel-text="whiteboardConfirmText.cancelText"
+      @confirm="handleConfirmDialog"
+      @cancel="whiteboardConfirm = null"
+    />
+
     <TextBox
       v-if="active && textBoxPos && !hideUiForCapture"
       ref="textBoxRef"
@@ -2063,6 +2372,14 @@ function exitDrawing(reason: 'keyboard' | 'toolbar' | 'unknown' = 'unknown') {
 </template>
 
 <style scoped>
+.whiteboard-tabbar-host {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100005;
+}
+
 .tooltip-fade-enter-active {
   transition: opacity 0.15s ease;
 }

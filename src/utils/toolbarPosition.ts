@@ -1,8 +1,10 @@
-const STORAGE_KEY = 'markeron-toolbar-position'
+import { readStoredWithLegacy } from './rebrandStorage'
+
+const STORAGE_KEY = 'lightcurtain-toolbar-position'
 /** Legacy standalone window position (physical pixels). */
-const WINDOW_STORAGE_KEY_V1 = 'markeron-toolbar-window-position'
+const WINDOW_STORAGE_KEY_V1 = 'lightcurtain-toolbar-window-position'
 /** Standalone window position (logical pixels). */
-const WINDOW_STORAGE_KEY_V2 = 'markeron-toolbar-window-position-v2'
+const WINDOW_STORAGE_KEY_V2 = 'lightcurtain-toolbar-window-position-v2'
 
 export type ToolbarCoordSpace = 'logical' | 'physical'
 
@@ -111,10 +113,6 @@ export function adjustToolbarTopForHeightChange(
   return Math.min(Math.max(nextTop, minTop), maxTop)
 }
 
-function storageKey(forStandaloneWindow: boolean): string {
-  return forStandaloneWindow ? WINDOW_STORAGE_KEY_V2 : STORAGE_KEY
-}
-
 function parseStoredPosition(raw: string): ToolbarPosition | null {
   try {
     const parsed = JSON.parse(raw) as ToolbarPosition
@@ -139,21 +137,21 @@ export function migratePhysicalToLogical(position: ToolbarPosition, scaleFactor:
 export function loadToolbarPosition(forStandaloneWindow = false): ToolbarPosition | null {
   try {
     if (forStandaloneWindow) {
-      const v2Raw = localStorage.getItem(WINDOW_STORAGE_KEY_V2)
-      if (v2Raw) {
+      const v2Raw = readStoredWithLegacy(WINDOW_STORAGE_KEY_V2)
+      if (v2Raw !== null) {
         const parsed = parseStoredPosition(v2Raw)
         if (parsed) return { ...parsed, coordSpace: parsed.coordSpace ?? 'logical' }
       }
 
-      const v1Raw = localStorage.getItem(WINDOW_STORAGE_KEY_V1)
-      if (!v1Raw) return null
+      const v1Raw = readStoredWithLegacy(WINDOW_STORAGE_KEY_V1)
+      if (v1Raw === null) return null
       const legacy = parseStoredPosition(v1Raw)
       if (!legacy) return null
       return { ...legacy, coordSpace: legacy.coordSpace ?? 'physical' }
     }
 
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
+    const raw = readStoredWithLegacy(STORAGE_KEY)
+    if (raw === null) return null
     return parseStoredPosition(raw)
   } catch {
     return null

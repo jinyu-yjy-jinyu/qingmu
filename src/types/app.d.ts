@@ -5,6 +5,8 @@ export interface AppConfig {
     toggleDrawing: string
     clearDrawing: string
     togglePenetration: string
+    startAnnotationWhiteboard: string
+    startAnnotationScreen: string
   }
   general: {
     dragMode?: DragMode

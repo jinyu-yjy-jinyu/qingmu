@@ -12,13 +12,13 @@
   IgnorableNamespaces="uap uap2 uap3 uap10 desktop desktop6 rescap">
 
   <Identity
-    Name="ifer.MarkerOn"
+    Name="轻幕"
     Publisher="CN=1CC39F0D-AB5D-475D-87ED-F37428C133CD"
-    Version="0.1.6.0"
+    Version="1.0.2.0"
     ProcessorArchitecture="x64" />
 
   <Properties>
-    <DisplayName>MarkerOn</DisplayName>
+    <DisplayName>轻幕</DisplayName>
     <PublisherDisplayName>ifer</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -32,13 +32,13 @@
   </Resources>
 
   <Applications>
-    <Application Id="MarkerOn"
-      Executable="markeron.exe"
+    <Application Id="轻幕"
+      Executable="轻幕.exe"
       EntryPoint="Windows.FullTrustApplication"
       uap10:TrustLevel="mediumIL"
       uap10:RuntimeBehavior="packagedClassicApp">
       <uap:VisualElements
-        DisplayName="MarkerOn"
+        DisplayName="轻幕"
         Description="轻量级屏幕标注工具 — 按下快捷键，随时在桌面上自由绘画、标注"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"

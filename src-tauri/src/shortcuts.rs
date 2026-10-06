@@ -49,6 +49,17 @@ mod tests {
         assert!(parse_shortcut(&defaults.toggle_drawing).is_some());
         assert!(parse_shortcut(&defaults.clear_drawing).is_some());
         assert!(parse_shortcut(&defaults.toggle_penetration).is_some());
+        assert!(parse_shortcut(&defaults.start_annotation_whiteboard).is_some());
+        assert!(parse_shortcut(&defaults.start_annotation_screen).is_some());
+    }
+
+    #[test]
+    fn parse_new_mode_shortcuts() {
+        assert!(parse_shortcut("Ctrl+Shift+B").is_some());
+        assert!(parse_shortcut("Command+Shift+B").is_some());
+        assert!(parse_shortcut("Ctrl+Shift+A").is_some());
+        assert!(parse_shortcut("Command+Shift+A").is_some());
+        assert!(parse_shortcut("Ctrl+Alt+W").is_some());
     }
 }
 
@@ -131,6 +142,47 @@ pub fn register_shortcuts(app: &AppHandle) {
             info!(
                 "Registered toggle_penetration shortcut: {}",
                 config.shortcuts.toggle_penetration
+            );
+        }
+    }
+
+    if let Some(shortcut) = parse_shortcut(&config.shortcuts.start_annotation_whiteboard) {
+        if let Err(e) = app
+            .global_shortcut()
+            .on_shortcut(shortcut, move |app, _shortcut, event| {
+                if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
+                    let state = app.state::<crate::config::AppState>();
+                    crate::start_annotation_for_mode(app, &state, true);
+                }
+            })
+        {
+            warn!(
+                "Failed to register start_annotation_whiteboard shortcut: {}",
+                e
+            );
+        } else {
+            info!(
+                "Registered start_annotation_whiteboard shortcut: {}",
+                config.shortcuts.start_annotation_whiteboard
+            );
+        }
+    }
+
+    if let Some(shortcut) = parse_shortcut(&config.shortcuts.start_annotation_screen) {
+        if let Err(e) = app
+            .global_shortcut()
+            .on_shortcut(shortcut, move |app, _shortcut, event| {
+                if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
+                    let state = app.state::<crate::config::AppState>();
+                    crate::start_annotation_for_mode(app, &state, false);
+                }
+            })
+        {
+            warn!("Failed to register start_annotation_screen shortcut: {}", e);
+        } else {
+            info!(
+                "Registered start_annotation_screen shortcut: {}",
+                config.shortcuts.start_annotation_screen
             );
         }
     }

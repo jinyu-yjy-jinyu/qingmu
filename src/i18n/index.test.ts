@@ -95,6 +95,26 @@ describe('useI18n', () => {
       expect(t('settings.autoStartFailedDisable')).toContain('登录项')
     })
 
+    it('exposes new mode-entry shortcut labels in both locales', () => {
+      const { locale, t } = useI18n()
+      for (const lang of ['zh-CN', 'en']) {
+        locale.locale = lang
+        expect(t('settings.shortcutLabels.startAnnotationWhiteboard').length).toBeGreaterThan(0)
+        expect(t('settings.shortcutLabels.startAnnotationScreen').length).toBeGreaterThan(0)
+        expect(t('help.startAnnotationWhiteboard').length).toBeGreaterThan(0)
+        expect(t('help.startAnnotationScreen').length).toBeGreaterThan(0)
+        expect(t('settings.shortcutLabels.startAnnotationWhiteboard')).not.toContain('shortcutLabels')
+      }
+    })
+
+    it('exposes the rebranded brand name in both locales', () => {
+      const { locale, t } = useI18n()
+      locale.locale = 'zh-CN'
+      expect(t('brand.name')).toBe('轻幕')
+      locale.locale = 'en'
+      expect(t('brand.name')).toBe('LightCurtain')
+    })
+
     it('replaces {mod} placeholder in comboRequirement', () => {
       const { locale, t } = useI18n()
       locale.locale = 'zh-CN'

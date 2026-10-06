@@ -1,8 +1,8 @@
-# Generate a self-signed code-signing certificate for MarkerOn
+# Generate a self-signed code-signing certificate for AnnotPen
 # Usage: powershell -ExecutionPolicy Bypass -File scripts/generate-cert.ps1
 
 param(
-    [string]$Password = "MarkerOn2026!",
+    [string]$Password = "AnnotPen2026!",
     [string]$OutputDir = (Split-Path -Parent $PSScriptRoot)
 )
 
@@ -11,7 +11,7 @@ $cerPath = Join-Path $OutputDir "codesign.cer"
 $thumbprintPath = Join-Path $OutputDir ".cert-thumbprint"
 
 $cert = New-SelfSignedCertificate `
-    -Subject "CN=MarkerOn Developer, O=MarkerOn" `
+    -Subject "CN=AnnotPen Developer, O=AnnotPen" `
     -Type CodeSigningCert `
     -CertStoreLocation "Cert:\CurrentUser\My" `
     -NotAfter (Get-Date).AddYears(3) `

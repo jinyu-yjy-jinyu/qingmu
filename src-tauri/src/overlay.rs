@@ -230,7 +230,7 @@ fn create_toolbar_window(app: &AppHandle) {
 
     let url = WebviewUrl::App("index.html#toolbar".into());
     let builder = WebviewWindowBuilder::new(app, "toolbar", url)
-        .title("MarkerOn")
+        .title("轻幕")
         .inner_size(TOOLBAR_WIDTH, TOOLBAR_PANEL_HEIGHT_COMPACT)
         .decorations(false)
         .transparent(true)
@@ -670,6 +670,84 @@ pub fn toggle_drawing(app: &AppHandle) {
     }
 }
 
+/// Action sequence computed for a "start annotation for mode" global shortcut.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum AnnotationAction {
+    /// Already in the target mode — nothing to do (idempotent).
+    None,
+    /// Hidden: broadcast the mode request first (frontend parks it), then activate.
+    EmitThenActivate,
+    /// Penetration: exit click-through (→ Drawing), then broadcast the request.
+    ExitPenetrationThenEmit,
+    /// Drawing with mismatched mode: broadcast the request only.
+    Emit,
+}
+
+/// Pure decision table for the mode-entry shortcut. See design.md §2.1.3.
+fn resolve_annotation_action(
+    current_mode: OverlayMode,
+    current_whiteboard: bool,
+    target_whiteboard: bool,
+) -> AnnotationAction {
+    match current_mode {
+        OverlayMode::Hidden => AnnotationAction::EmitThenActivate,
+        OverlayMode::Penetration => AnnotationAction::ExitPenetrationThenEmit,
+        OverlayMode::Drawing => {
+            if current_whiteboard == target_whiteboard {
+                AnnotationAction::None
+            } else {
+                AnnotationAction::Emit
+            }
+        }
+    }
+}
+
+fn emit_annotation_mode_request(app: &AppHandle, whiteboard: bool) {
+    let payload = if whiteboard { "whiteboard" } else { "screen" };
+    if let Err(e) = app.emit("annotation-mode-request", payload) {
+        warn!("Failed to emit annotation-mode-request: {}", e);
+    }
+}
+
+/// Start annotation directly in the requested mode (`whiteboard=true` → whiteboard,
+/// `false` → screen overlay), from a global shortcut. Mirrors the frontend whiteboard
+/// state so the penetration gate stays consistent, and logs for diagnostics.
+pub fn start_annotation_for_mode(app: &AppHandle, state: &AppState, whiteboard: bool) {
+    let current = current_mode(state);
+    let current_whiteboard = *lock_or_recover(&state.whiteboard_mode);
+    let action = resolve_annotation_action(current, current_whiteboard, whiteboard);
+
+    match action {
+        AnnotationAction::None => return,
+        AnnotationAction::EmitThenActivate => {
+            emit_annotation_mode_request(app, whiteboard);
+            *lock_or_recover(&state.whiteboard_mode) = whiteboard;
+            activate_drawing(app, state);
+        }
+        AnnotationAction::ExitPenetrationThenEmit => {
+            exit_penetration_mode(app, state);
+            emit_annotation_mode_request(app, whiteboard);
+            *lock_or_recover(&state.whiteboard_mode) = whiteboard;
+        }
+        AnnotationAction::Emit => {
+            emit_annotation_mode_request(app, whiteboard);
+            *lock_or_recover(&state.whiteboard_mode) = whiteboard;
+        }
+    }
+
+    log_backend_event(
+        state,
+        "session",
+        if whiteboard {
+            "enter whiteboard mode requested"
+        } else {
+            "enter screen mode requested"
+        },
+        Some(serde_json::json!({ "reason": "global-shortcut" })),
+        "info",
+    );
+}
+
 pub fn clear_drawing(app: &AppHandle, state: &AppState) {
     if current_mode(state) == OverlayMode::Hidden {
         return;
@@ -715,6 +793,8 @@ pub fn on_overlay_focus_lost(app: &AppHandle, state: &AppState) {
 
 #[cfg(test)]
 mod tests {
+    use super::{resolve_annotation_action, AnnotationAction, OverlayMode};
+
     /// Regression guard for cross-platform toolbar stacking in `raise_toolbar_above_overlay`.
     ///
     /// macOS must use AppKit `addChildWindow` (`macos.rs`), not the Win32-only
@@ -734,6 +814,56 @@ mod tests {
         assert!(
             cfg!(windows),
             "Windows must compile the SetWindowPos topmost reorder block"
+        );
+    }
+
+    #[test]
+    fn resolve_action_hidden_always_emits_then_activates() {
+        for target in [true, false] {
+            for current_wb in [true, false] {
+                assert_eq!(
+                    resolve_annotation_action(OverlayMode::Hidden, current_wb, target),
+                    AnnotationAction::EmitThenActivate,
+                    "hidden + target={target} + current_wb={current_wb}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn resolve_action_penetration_exits_then_emits() {
+        for target in [true, false] {
+            for current_wb in [true, false] {
+                assert_eq!(
+                    resolve_annotation_action(OverlayMode::Penetration, current_wb, target),
+                    AnnotationAction::ExitPenetrationThenEmit,
+                    "penetration + target={target} + current_wb={current_wb}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn resolve_action_drawing_mismatch_emits_only() {
+        assert_eq!(
+            resolve_annotation_action(OverlayMode::Drawing, false, true),
+            AnnotationAction::Emit
+        );
+        assert_eq!(
+            resolve_annotation_action(OverlayMode::Drawing, true, false),
+            AnnotationAction::Emit
+        );
+    }
+
+    #[test]
+    fn resolve_action_drawing_match_is_idempotent() {
+        assert_eq!(
+            resolve_annotation_action(OverlayMode::Drawing, true, true),
+            AnnotationAction::None
+        );
+        assert_eq!(
+            resolve_annotation_action(OverlayMode::Drawing, false, false),
+            AnnotationAction::None
         );
     }
 }

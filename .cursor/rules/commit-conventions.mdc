@@ -1,5 +1,5 @@
 ---
-description: Conventional Commits for MarkerOn — use npm run commit; body line length and types feed release notes.
+description: Conventional Commits for AnnotPen — use npm run commit; body line length and types feed release notes.
 globs: commitlint.config.js,.husky/**,CONTRIBUTING.md
 alwaysApply: false
 ---
@@ -24,22 +24,22 @@ Hooks run automatically: `lint-staged` (pre-commit), `commitlint` (commit-msg).
 <body optional>
 ```
 
-| Rule | Limit |
-|------|-------|
-| Subject | ≤ 100 chars (`subject-max-length`) |
+| Rule       | Limit                                                            |
+| ---------- | ---------------------------------------------------------------- |
+| Subject    | ≤ 100 chars (`subject-max-length`)                               |
 | Body lines | ≤ 100 chars each (`body-max-line-length`) — **split long lines** |
 
 ## Types (release notes mapping)
 
-| Type | Release section | When to use |
-|------|-----------------|-------------|
-| `feat` | ✨ New | User-facing feature |
-| `fix`, `hotfix` | 🛠 Fixes | Bug fix |
-| `docs` | 📚 Documentation | README, CONTRIBUTING |
-| `ci`, `build` | 👷 CI | Workflows, build scripts |
-| `ui` | 🧹 Improvements | Visual-only (also valid) |
-| `i18n` | 🧹 Improvements | Locale strings |
-| `chore`, `refactor`, `perf`, `test`, `style` | 🧹 Improvements | Internal / maintenance |
+| Type                                         | Release section  | When to use              |
+| -------------------------------------------- | ---------------- | ------------------------ |
+| `feat`                                       | ✨ New           | User-facing feature      |
+| `fix`, `hotfix`                              | 🛠 Fixes         | Bug fix                  |
+| `docs`                                       | 📚 Documentation | README, CONTRIBUTING     |
+| `ci`, `build`                                | 👷 CI            | Workflows, build scripts |
+| `ui`                                         | 🧹 Improvements  | Visual-only (also valid) |
+| `i18n`                                       | 🧹 Improvements  | Locale strings           |
+| `chore`, `refactor`, `perf`, `test`, `style` | 🧹 Improvements  | Internal / maintenance   |
 
 **Do not** use `release:` for daily work — `npm run release` creates `chore(release): vX.Y.Z` automatically.
 

@@ -12,6 +12,16 @@ pub struct Shortcuts {
     pub clear_drawing: String,
     #[serde(default = "default_toggle_penetration", rename = "togglePenetration")]
     pub toggle_penetration: String,
+    #[serde(
+        default = "default_start_annotation_whiteboard",
+        rename = "startAnnotationWhiteboard"
+    )]
+    pub start_annotation_whiteboard: String,
+    #[serde(
+        default = "default_start_annotation_screen",
+        rename = "startAnnotationScreen"
+    )]
+    pub start_annotation_screen: String,
 }
 
 fn default_toggle_penetration() -> String {
@@ -22,6 +32,28 @@ fn default_toggle_penetration() -> String {
     #[cfg(not(target_os = "macos"))]
     {
         "Ctrl+Shift+X".into()
+    }
+}
+
+fn default_start_annotation_whiteboard() -> String {
+    #[cfg(target_os = "macos")]
+    {
+        "Command+Shift+B".into()
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        "Ctrl+Shift+B".into()
+    }
+}
+
+fn default_start_annotation_screen() -> String {
+    #[cfg(target_os = "macos")]
+    {
+        "Command+Shift+A".into()
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        "Ctrl+Shift+A".into()
     }
 }
 
@@ -241,6 +273,8 @@ pub fn default_shortcuts() -> Shortcuts {
             toggle_drawing: "Command+Shift+D".into(),
             clear_drawing: "Command+Shift+C".into(),
             toggle_penetration: "Command+Shift+X".into(),
+            start_annotation_whiteboard: "Command+Shift+B".into(),
+            start_annotation_screen: "Command+Shift+A".into(),
         }
     }
     #[cfg(not(target_os = "macos"))]
@@ -249,12 +283,15 @@ pub fn default_shortcuts() -> Shortcuts {
             toggle_drawing: "Ctrl+Shift+D".into(),
             clear_drawing: "Ctrl+Shift+C".into(),
             toggle_penetration: "Ctrl+Shift+X".into(),
+            start_annotation_whiteboard: "Ctrl+Shift+B".into(),
+            start_annotation_screen: "Ctrl+Shift+A".into(),
         }
     }
 }
 
 impl Shortcuts {
-    /// Migrate legacy default penetration shortcut (Shift+P → Shift+X).
+    /// Migrate legacy default penetration shortcut (Shift+P → Shift+X) and
+    /// fall back unparseable new shortcut bindings to the platform default.
     pub fn normalized(mut self) -> Self {
         #[cfg(target_os = "macos")]
         {
@@ -267,6 +304,16 @@ impl Shortcuts {
             if self.toggle_penetration == "Ctrl+Shift+P" {
                 self.toggle_penetration = "Ctrl+Shift+X".into();
             }
+        }
+        if !self.start_annotation_whiteboard.is_empty()
+            && crate::shortcuts::parse_shortcut(&self.start_annotation_whiteboard).is_none()
+        {
+            self.start_annotation_whiteboard = default_start_annotation_whiteboard();
+        }
+        if !self.start_annotation_screen.is_empty()
+            && crate::shortcuts::parse_shortcut(&self.start_annotation_screen).is_none()
+        {
+            self.start_annotation_screen = default_start_annotation_screen();
         }
         self
     }
@@ -790,18 +837,16 @@ mod tests {
         #[cfg(target_os = "macos")]
         {
             let shortcuts = Shortcuts {
-                toggle_drawing: "Command+Shift+D".into(),
-                clear_drawing: "Command+Shift+C".into(),
                 toggle_penetration: "Command+Shift+P".into(),
+                ..default_shortcuts()
             };
             assert_eq!(shortcuts.normalized().toggle_penetration, "Command+Shift+X");
         }
         #[cfg(not(target_os = "macos"))]
         {
             let shortcuts = Shortcuts {
-                toggle_drawing: "Ctrl+Shift+D".into(),
-                clear_drawing: "Ctrl+Shift+C".into(),
                 toggle_penetration: "Ctrl+Shift+P".into(),
+                ..default_shortcuts()
             };
             assert_eq!(shortcuts.normalized().toggle_penetration, "Ctrl+Shift+X");
         }
@@ -887,5 +932,97 @@ mod tests {
             ..GeneralConfig::default()
         };
         assert_eq!(g.normalized().theme, ThemePreference::System);
+    }
+
+    #[test]
+    fn default_start_annotation_shortcuts_match_platform() {
+        let shortcuts = default_shortcuts();
+        #[cfg(target_os = "macos")]
+        {
+            assert_eq!(shortcuts.start_annotation_whiteboard, "Command+Shift+B");
+            assert_eq!(shortcuts.start_annotation_screen, "Command+Shift+A");
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            assert_eq!(shortcuts.start_annotation_whiteboard, "Ctrl+Shift+B");
+            assert_eq!(shortcuts.start_annotation_screen, "Ctrl+Shift+A");
+        }
+    }
+
+    #[test]
+    fn old_config_backfills_new_shortcut_fields() {
+        let json = r#"{
+            "shortcuts": {
+                "toggleDrawing": "Ctrl+Alt+D",
+                "clearDrawing": "Ctrl+Alt+C",
+                "togglePenetration": "Ctrl+Alt+X"
+            }
+        }"#;
+        let config: AppConfig = serde_json::from_str(json).unwrap();
+        assert_eq!(config.shortcuts.toggle_drawing, "Ctrl+Alt+D");
+        assert_eq!(config.shortcuts.clear_drawing, "Ctrl+Alt+C");
+        assert_eq!(config.shortcuts.toggle_penetration, "Ctrl+Alt+X");
+        #[cfg(target_os = "macos")]
+        {
+            assert_eq!(
+                config.shortcuts.start_annotation_whiteboard,
+                "Command+Shift+B"
+            );
+            assert_eq!(config.shortcuts.start_annotation_screen, "Command+Shift+A");
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            assert_eq!(config.shortcuts.start_annotation_whiteboard, "Ctrl+Shift+B");
+            assert_eq!(config.shortcuts.start_annotation_screen, "Ctrl+Shift+A");
+        }
+    }
+
+    #[test]
+    fn normalized_falls_back_invalid_new_shortcut_bindings() {
+        let shortcuts = Shortcuts {
+            start_annotation_whiteboard: "NotAKey".into(),
+            start_annotation_screen: "+++".into(),
+            ..default_shortcuts()
+        };
+        let normalized = shortcuts.normalized();
+        #[cfg(target_os = "macos")]
+        {
+            assert_eq!(normalized.start_annotation_whiteboard, "Command+Shift+B");
+            assert_eq!(normalized.start_annotation_screen, "Command+Shift+A");
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            assert_eq!(normalized.start_annotation_whiteboard, "Ctrl+Shift+B");
+            assert_eq!(normalized.start_annotation_screen, "Ctrl+Shift+A");
+        }
+    }
+
+    #[test]
+    fn normalized_keeps_valid_new_shortcut_bindings() {
+        let shortcuts = Shortcuts {
+            start_annotation_whiteboard: "Ctrl+Alt+W".into(),
+            start_annotation_screen: String::new(),
+            ..default_shortcuts()
+        };
+        let normalized = shortcuts.normalized();
+        assert_eq!(normalized.start_annotation_whiteboard, "Ctrl+Alt+W");
+        assert!(normalized.start_annotation_screen.is_empty());
+    }
+
+    #[test]
+    fn shortcuts_roundtrip_includes_new_fields() {
+        let config = AppConfig::default();
+        let json = serde_json::to_string(&config).unwrap();
+        assert!(json.contains("startAnnotationWhiteboard"));
+        assert!(json.contains("startAnnotationScreen"));
+        let parsed: AppConfig = serde_json::from_str(&json).unwrap();
+        assert_eq!(
+            parsed.shortcuts.start_annotation_whiteboard,
+            config.shortcuts.start_annotation_whiteboard
+        );
+        assert_eq!(
+            parsed.shortcuts.start_annotation_screen,
+            config.shortcuts.start_annotation_screen
+        );
     }
 }

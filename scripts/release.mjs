@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * MarkerOn release automation.
+ * AnnotPen release automation.
  *
  * Usage:
  *   npm run release:check          # pre-release validation only
@@ -71,6 +71,9 @@ function runChecks() {
 
   header('Frontend format')
   run('npm run format:check')
+
+  header('Rebrand residue scan')
+  run('npm run rebrand:scan')
 
   header('Rust format')
   const cargo = spawnSync('cargo', ['fmt', '--check'], {

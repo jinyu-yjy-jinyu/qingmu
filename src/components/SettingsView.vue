@@ -13,9 +13,10 @@ import { isInstalledMode, supportsAutostart } from '../utils/portable'
 import { isMacOS } from '../utils/platform'
 import { useI18n, syncLocaleFromConfig } from '../i18n'
 import GeneralTab from './settings/GeneralTab.vue'
-import DiagnosticsTab from './settings/DiagnosticsTab.vue'
+
 import AboutTab from './settings/AboutTab.vue'
 import SettingsSidebarFooter from './settings/SettingsSidebarFooter.vue'
+import appIcon from '../assets/app-icon-84.png'
 
 const { t } = useI18n()
 
@@ -30,18 +31,34 @@ const defaultShortcutStrings = computed(() =>
         toggleDrawing: 'Command+Shift+D',
         clearDrawing: 'Command+Shift+C',
         togglePenetration: 'Command+Shift+X',
+        startAnnotationWhiteboard: 'Command+Shift+B',
+        startAnnotationScreen: 'Command+Shift+A',
       }
     : {
         toggleDrawing: 'Ctrl+Shift+D',
         clearDrawing: 'Ctrl+Shift+C',
         togglePenetration: 'Ctrl+Shift+X',
+        startAnnotationWhiteboard: 'Ctrl+Shift+B',
+        startAnnotationScreen: 'Ctrl+Shift+A',
       },
 )
 
 const helpGlobalKeys = computed(() =>
   isMacOS()
-    ? { toggle: '⌘+⇧+D', clear: '⌘+⇧+C', through: '⌘+⇧+X' }
-    : { toggle: 'Ctrl+Shift+D', clear: 'Ctrl+Shift+C', through: 'Ctrl+Shift+X' },
+    ? {
+        toggle: '⌘+⇧+D',
+        clear: '⌘+⇧+C',
+        through: '⌘+⇧+X',
+        startWhiteboard: '⌘+⇧+B',
+        startScreen: '⌘+⇧+A',
+      }
+    : {
+        toggle: 'Ctrl+Shift+D',
+        clear: 'Ctrl+Shift+C',
+        through: 'Ctrl+Shift+X',
+        startWhiteboard: 'Ctrl+Shift+B',
+        startScreen: 'Ctrl+Shift+A',
+      },
 )
 
 const helpTools = [
@@ -58,23 +75,25 @@ const helpTools = [
 ] as const
 
 const hashTab = window.location.hash.split('/')[1]
-const activeTab = ref(
-  hashTab && ['general', 'shortcuts', 'help', 'diagnostics', 'about'].includes(hashTab) ? hashTab : 'general',
-)
+const activeTab = ref(hashTab && ['general', 'shortcuts', 'help', 'about'].includes(hashTab) ? hashTab : 'general')
 
-const tabIds = ['general', 'shortcuts', 'help', 'diagnostics', 'about'] as const
+const tabIds = ['general', 'shortcuts', 'help', 'about'] as const
 const tabs = computed(() => tabIds.map((id) => ({ id, label: t(`settings.tabs.${id}`) })))
 
 const shortcuts = reactive<AppConfig['shortcuts']>({
   toggleDrawing: '',
   clearDrawing: '',
   togglePenetration: '',
+  startAnnotationWhiteboard: '',
+  startAnnotationScreen: '',
 })
 
 const labels = computed<Record<keyof AppConfig['shortcuts'], string>>(() => ({
   toggleDrawing: t('settings.shortcutLabels.toggleDrawing'),
   clearDrawing: t('settings.shortcutLabels.clearDrawing'),
   togglePenetration: t('settings.shortcutLabels.togglePenetration'),
+  startAnnotationWhiteboard: t('settings.shortcutLabels.startAnnotationWhiteboard'),
+  startAnnotationScreen: t('settings.shortcutLabels.startAnnotationScreen'),
 }))
 
 const capturing = ref<keyof AppConfig['shortcuts'] | null>(null)
@@ -191,12 +210,16 @@ async function resetDefaults() {
       toggleDrawing: d.toggleDrawing,
       clearDrawing: d.clearDrawing,
       togglePenetration: d.togglePenetration,
+      startAnnotationWhiteboard: d.startAnnotationWhiteboard,
+      startAnnotationScreen: d.startAnnotationScreen,
     },
   })
   if (res.ok) {
     shortcuts.toggleDrawing = d.toggleDrawing
     shortcuts.clearDrawing = d.clearDrawing
     shortcuts.togglePenetration = d.togglePenetration
+    shortcuts.startAnnotationWhiteboard = d.startAnnotationWhiteboard
+    shortcuts.startAnnotationScreen = d.startAnnotationScreen
     if (res.failed?.length) {
       message.value = {
         type: 'success',
@@ -227,7 +250,7 @@ function resolveThemePref(general?: AppConfig['general']): ThemePreference {
 
 async function openOnlineHelp() {
   try {
-    await invoke('open_url', { url: 'https://markeron.cn/help.html' })
+    await invoke('open_url', { url: 'https://lightcurtain.cn/help.html' })
   } catch (error) {
     console.error('Failed to open online help:', error)
   }
@@ -296,13 +319,8 @@ onUnmounted(() => {
     <!-- Sidebar -->
     <div class="relative z-10 w-41 shrink-0 settings-sidebar flex flex-col ui-divider-v">
       <div class="flex items-center gap-2.5 px-4 pt-5 pb-5">
-        <svg class="w-7 h-7 shrink-0" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M659.498667 412.8l-6.101334-6.058667a233.6 233.6 0 0 0-101.973333-57.557333c-124.032-33.237333-243.157333 37.077333-276.992 163.413333-1.834667 6.826667-2.816 14.506667-4.437333 33.749334-6.570667 79.786667-25.344 139.306667-76.8 199.68 96.426667 37.888 210.688 64.597333 297.557333 64.597333a234.88 234.88 0 0 0 226.56-174.037333 234.538667 234.538667 0 0 0-57.856-223.786667z m-92.501334-147.712l210.730667-163.925333a42.666667 42.666667 0 0 1 56.32 3.541333l127.786667 127.744a42.666667 42.666667 0 0 1 3.498666 56.32l-163.84 210.730667a320.213333 320.213333 0 0 1-310.741333 396.458666C341.333333 895.957333 149.333333 831.872 42.666667 767.872c169.813333-128 130.005333-205.226667 149.333333-277.333333 45.141333-168.533333 206.592-267.008 374.997333-225.450667zM712.533333 345.258667c2.816 2.688 5.546667 5.461333 8.277334 8.234666L769.28 401.92l105.6-135.765333-74.496-74.496-135.765333 105.6L712.533333 345.258667z"
-            fill="currentColor"
-          />
-        </svg>
-        <span class="font-semibold settings-text-brand tracking-wide leading-tight">MarkerOn</span>
+        <img :src="appIcon" alt="轻幕" class="w-7 h-7 shrink-0 rounded-md" />
+        <span class="font-semibold settings-text-brand tracking-wide leading-tight">{{ t('brand.name') }}</span>
       </div>
 
       <nav role="tablist" aria-orientation="vertical" class="flex flex-col gap-0.5 px-2">
@@ -361,22 +379,6 @@ onUnmounted(() => {
             <circle cx="12" cy="12" r="10" />
             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
             <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
-          <svg
-            v-else-if="tab.id === 'diagnostics'"
-            class="w-3.5 h-3.5 shrink-0 opacity-70"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-            <polyline points="10 9 9 9 8 9" />
           </svg>
           <svg
             v-else-if="tab.id === 'about'"
@@ -551,6 +553,18 @@ onUnmounted(() => {
                   <kbd class="help-kbd">{{ helpGlobalKeys.through }}</kbd>
                 </div>
               </div>
+              <div class="help-row">
+                <span class="help-label">{{ t('help.startAnnotationWhiteboard') }}</span>
+                <div class="help-keys">
+                  <kbd class="help-kbd">{{ helpGlobalKeys.startWhiteboard }}</kbd>
+                </div>
+              </div>
+              <div class="help-row">
+                <span class="help-label">{{ t('help.startAnnotationScreen') }}</span>
+                <div class="help-keys">
+                  <kbd class="help-kbd">{{ helpGlobalKeys.startScreen }}</kbd>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -692,10 +706,46 @@ onUnmounted(() => {
               </div>
             </div>
           </div>
+
+          <div class="settings-card help-card">
+            <div class="help-card-header">{{ t('help.whiteboardGuide') }}</div>
+            <div class="help-rows">
+              <div class="help-row help-row-block">
+                <span class="help-label">{{ t('help.wbEnterExitLabel') }}</span>
+                <span class="help-desc" v-html="t('help.wbEnterExitDesc')" />
+              </div>
+              <div class="help-row help-row-block">
+                <span class="help-label">{{ t('help.wbTabsLabel') }}</span>
+                <span class="help-desc" v-html="t('help.wbTabsDesc')" />
+              </div>
+              <div class="help-row help-row-block">
+                <span class="help-label">{{ t('help.wbSwitchLabel') }}</span>
+                <span class="help-desc" v-html="t('help.wbSwitchDesc')" />
+              </div>
+              <div class="help-row help-row-block">
+                <span class="help-label">{{ t('help.wbPanLabel') }}</span>
+                <span class="help-desc" v-html="t('help.wbPanDesc')" />
+              </div>
+              <div class="help-row help-row-block">
+                <span class="help-label">{{ t('help.wbZoomLabel') }}</span>
+                <span class="help-desc" v-html="t('help.wbZoomDesc')" />
+              </div>
+              <div class="help-row help-row-block">
+                <span class="help-label">{{ t('help.wbClearLabel') }}</span>
+                <span class="help-desc" v-html="t('help.wbClearDesc')" />
+              </div>
+              <div class="help-row help-row-block">
+                <span class="help-label">{{ t('help.wbExportLabel') }}</span>
+                <span class="help-desc" v-html="t('help.wbExportDesc')" />
+              </div>
+              <div class="help-row help-row-block">
+                <span class="help-label">{{ t('help.wbCopyLabel') }}</span>
+                <span class="help-desc" v-html="t('help.wbCopyDesc')" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      <DiagnosticsTab v-else-if="activeTab === 'diagnostics'" />
 
       <AboutTab v-else-if="activeTab === 'about'" />
     </div>

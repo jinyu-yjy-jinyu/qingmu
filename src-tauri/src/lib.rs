@@ -1,11 +1,12 @@
 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
-compile_error!("MarkerOn only supports Windows and macOS.");
+compile_error!("轻幕 only supports Windows and macOS.");
 
 mod clipboard;
 mod commands;
 mod config;
 mod diagnostics;
 mod error;
+mod export;
 mod i18n;
 #[cfg(target_os = "macos")]
 mod macos;
@@ -14,6 +15,7 @@ mod macos_cursor;
 mod monitor;
 mod overlay;
 mod portable;
+mod rebrand;
 mod shortcuts;
 mod theme;
 #[cfg(target_os = "windows")]
@@ -32,7 +34,7 @@ use diagnostics::log_backend_event;
 pub use overlay::{
     activate_drawing, clear_drawing, deactivate_drawing, enter_penetration_mode,
     exit_penetration_mode, raise_toolbar_above_overlay, set_toolbar_window_visible,
-    setup_overlay_size, toggle_drawing, toggle_penetration_mode,
+    setup_overlay_size, start_annotation_for_mode, toggle_drawing, toggle_penetration_mode,
 };
 
 pub fn rebuild_tray_menu(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
@@ -172,7 +174,7 @@ pub fn run() {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
+
         .plugin(tauri_plugin_process::init())
         .manage(AppState {
             config: Mutex::new(AppConfig::default()),
@@ -210,20 +212,22 @@ pub fn run() {
             diagnostics::append_diagnostic_event,
             clipboard::copy_screen,
             clipboard::copy_whiteboard,
+            export::save_whiteboard_png,
         ])
         .setup(|app| {
             let handle = app.handle().clone();
             let log_guard = diagnostics::init_tracing(&handle)?;
             app.manage(log_guard);
             if portable::is_portable() {
-                info!("Starting MarkerOn (portable mode)");
+                info!("Starting 轻幕 (portable mode)");
             } else {
-                info!("Starting MarkerOn");
+                info!("Starting 轻幕");
             }
 
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
+            rebrand::migrate_config_dir(&handle);
             let loaded = config::load_config(&handle);
             i18n::init(loaded.general.locale.as_deref());
             {
@@ -305,5 +309,5 @@ pub fn run() {
             _ => {}
         })
         .run(tauri::generate_context!())
-        .expect("error while running MarkerOn");
+        .expect("error while running 轻幕");
 }

@@ -10,6 +10,7 @@ function createMockCanvas(): HTMLCanvasElement {
     save: vi.fn(),
     restore: vi.fn(),
     clearRect: vi.fn(),
+    fillRect: vi.fn(),
     drawImage: vi.fn(),
     beginPath: vi.fn(),
     closePath: vi.fn(),
@@ -43,6 +44,7 @@ function createMockCanvas(): HTMLCanvasElement {
     height: 1080,
     style: { width: '1920px', height: '1080px' },
     getContext: vi.fn(() => ctx),
+    toDataURL: vi.fn(() => 'data:image/png;base64,dGVzdA=='),
   } as unknown as HTMLCanvasElement
 
   ctx.canvas = canvas
@@ -70,6 +72,15 @@ vi.stubGlobal(
   Object.assign(globalThis.document ?? {}, {
     createElement: vi.fn(() => createMockCanvas()),
   }),
+)
+vi.stubGlobal(
+  'Path2D',
+  class {
+    moveTo = vi.fn()
+    lineTo = vi.fn()
+    quadraticCurveTo = vi.fn()
+    closePath = vi.fn()
+  },
 )
 
 describe('useDrawing', () => {
@@ -586,6 +597,67 @@ describe('useDrawing', () => {
 
     it('does not throw when no actions exist', () => {
       drawing.redrawAll()
+    })
+  })
+
+  describe('viewport', () => {
+    it('setViewport then getViewport returns the same state', () => {
+      drawing.setViewport({ offsetX: 100, offsetY: -50, zoom: 1.5 })
+      expect(drawing.getViewport()).toEqual({ offsetX: 100, offsetY: -50, zoom: 1.5 })
+    })
+
+    it('screenToWorld / worldToScreen are inverses under a viewport', () => {
+      drawing.setViewport({ offsetX: 120, offsetY: -40, zoom: 2 })
+      const world = drawing.screenToWorld(500, 300)
+      const screen = drawing.worldToScreen(world.x, world.y)
+      expect(screen.x).toBeCloseTo(500, 6)
+      expect(screen.y).toBeCloseTo(300, 6)
+    })
+  })
+
+  describe('captureState / restoreState', () => {
+    it('round-trips drawing content across clearAll', () => {
+      drawing.startDraw({ x: 10, y: 10 })
+      drawing.draw({ x: 50, y: 50 })
+      drawing.endDraw()
+      const snap = drawing.captureState()
+
+      drawing.clearAll()
+      expect(drawing.canClear.value).toBe(false)
+
+      drawing.restoreState(snap)
+      expect(drawing.canClear.value).toBe(true)
+      expect(drawing.findActionAt({ x: 30, y: 30 })).not.toBeNull()
+      drawing.undo()
+    })
+
+    it('restoreState keeps undo history intact', () => {
+      drawing.startDraw({ x: 0, y: 0 })
+      drawing.draw({ x: 20, y: 20 })
+      drawing.endDraw()
+      const snap = drawing.captureState()
+      drawing.clearAll()
+      drawing.restoreState(snap)
+      drawing.undo()
+      drawing.redo()
+    })
+
+    it('exportContentAsDataURL returns a PNG data URL with restored content', () => {
+      drawing.startDraw({ x: 10, y: 10 })
+      drawing.draw({ x: 50, y: 50 })
+      drawing.endDraw()
+      const snap = drawing.captureState()
+      drawing.clearAll()
+      drawing.restoreState(snap)
+      const dataUrl = drawing.exportContentAsDataURL('#FFFFFF')
+      expect(typeof dataUrl).toBe('string')
+      expect(dataUrl).toContain('data:image/png')
+    })
+
+    it('exportContentAsDataURL exports a plain background when empty', () => {
+      const dataUrl = drawing.exportContentAsDataURL('#FFFFFF', 200, 100)
+      expect(typeof dataUrl).toBe('string')
+      expect(dataUrl).toContain('data:image/png')
     })
   })
 })

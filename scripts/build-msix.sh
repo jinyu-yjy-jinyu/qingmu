@@ -9,11 +9,11 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RELEASE_DIR="$ROOT/src-tauri/target/release"
-EXE="$RELEASE_DIR/markeron.exe"
+EXE="$RELEASE_DIR/AnnotPen.exe"
 
 VERSION=$(cd "$ROOT" && node -p "require('./package.json').version")
 MSIX_VERSION="${VERSION}.0"
-echo "==> Building MSIX for MarkerOn v${VERSION} (MSIX ${MSIX_VERSION})"
+echo "==> Building MSIX for AnnotPen v${VERSION} (MSIX ${MSIX_VERSION})"
 
 if [[ ! -f "$EXE" ]]; then
   echo "ERROR: $EXE not found. Run 'npm run build' first."
@@ -53,7 +53,7 @@ cp "$ROOT"/assets/StoreLogo.png \
 
 OUTDIR="$RELEASE_DIR/bundle/msix"
 mkdir -p "$OUTDIR"
-OUTPUT="$OUTDIR/MarkerOn_${VERSION}_x64.msix"
+OUTPUT="$OUTDIR/AnnotPen_${VERSION}_x64.msix"
 rm -f "$OUTPUT"
 
 WIN_STAGING=$(cygpath -w "$STAGING")
