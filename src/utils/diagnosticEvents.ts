@@ -43,13 +43,7 @@ export function clearDiagnosticEvents(): void {
 }
 
 export type DiagnosticReason =
-  | 'keyboard'
-  | 'toolbar'
-  | 'global-shortcut'
-  | 'tray'
-  | 'focus-loss'
-  | 'activate'
-  | 'unknown'
+  'keyboard' | 'toolbar' | 'global-shortcut' | 'tray' | 'focus-loss' | 'activate' | 'unknown'
 
 export function logSessionEvent(
   message: string,

@@ -26,17 +26,17 @@
 
 | 格式 | 文件 | 说明 |
 | --- | --- | --- |
-| 安装向导 | `qingmu_1.0.1_x64-setup.exe` | 推荐，双击安装 |
-| MSI | `qingmu_1.0.1_x64_zh-CN.msi` | 适合企业批量部署 |
-| MSIX | `qingmu_1.0.1_x64.msix` | 微软商店格式 |
-| 便携版 | `lightcurtain_1.0.1_x64_portable.zip` | 解压即用，不写注册表 |
+| 安装向导 | `qingmu_1.0.3_x64-setup.exe` | 推荐，双击安装 |
+| MSI | `qingmu_1.0.3_x64_zh-CN.msi` | 适合企业批量部署 |
+| MSIX | `qingmu_1.0.3_x64.msix` | 微软商店格式 |
+| 便携版 | `lightcurtain_1.0.3_x64_portable.zip` | 解压即用，不写注册表 |
 
 ### macOS 11+
 
 | 芯片 | 文件 |
 | --- | --- |
-| Apple Silicon（M 系列） | `qingmu_1.0.1_aarch64.dmg` |
-| Intel | `qingmu_1.0.1_x64.dmg` |
+| Apple Silicon（M 系列） | `qingmu_1.0.3_aarch64.dmg` |
+| Intel | `qingmu_1.0.3_x64.dmg` |
 
 ### Linux
 

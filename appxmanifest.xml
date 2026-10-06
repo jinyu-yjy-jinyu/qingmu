@@ -17,7 +17,7 @@
   <Identity
     Name="LightCurtain.Qingmu"
     Publisher="CN=1CC39F0D-AB5D-475D-87ED-F37428C133CD"
-    Version="1.0.1.0"
+    Version="1.0.3.0"
     ProcessorArchitecture="x64" />
 
   <Properties>

@@ -26,17 +26,17 @@
 
 | Format | File | Notes |
 | --- | --- | --- |
-| Setup wizard | `qingmu_1.0.1_x64-setup.exe` | Recommended; double-click to install |
-| MSI | `qingmu_1.0.1_x64_zh-CN.msi` | Good for enterprise deployment |
-| MSIX | `qingmu_1.0.1_x64.msix` | Microsoft Store format |
-| Portable | `lightcurtain_1.0.1_x64_portable.zip` | Unzip and run; nothing written to the registry |
+| Setup wizard | `qingmu_1.0.3_x64-setup.exe` | Recommended; double-click to install |
+| MSI | `qingmu_1.0.3_x64_zh-CN.msi` | Good for enterprise deployment |
+| MSIX | `qingmu_1.0.3_x64.msix` | Microsoft Store format |
+| Portable | `lightcurtain_1.0.3_x64_portable.zip` | Unzip and run; nothing written to the registry |
 
 ### macOS 11+
 
 | Chip | File |
 | --- | --- |
-| Apple Silicon (M-series) | `qingmu_1.0.1_aarch64.dmg` |
-| Intel | `qingmu_1.0.1_x64.dmg` |
+| Apple Silicon (M-series) | `qingmu_1.0.3_aarch64.dmg` |
+| Intel | `qingmu_1.0.3_x64.dmg` |
 
 ### Linux
 
