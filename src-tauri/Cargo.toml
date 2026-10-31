@@ -1,6 +1,6 @@
 [package]
 name = "lightcurtain"
-version = "1.0.2"
+version = "1.1.0"
 description = "轻量级屏幕标注工具"
 authors = ["ifer47"]
 repository = "https://github.com/jinyu-yjy-jinyu/qingmu"
