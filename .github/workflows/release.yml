@@ -216,22 +216,25 @@ jobs:
           args: ${{ matrix.args }} ${{ steps.codesign.outputs.sign_args }}
 
       - name: Stash updater fragment
+        id: updater
         shell: bash
         run: |
-          # tauri-action writes latest.json to the project root (not under bundle/)
+          # tauri-action writes latest.json to the project root (not under bundle/).
+          # It only exists when bundle.createUpdaterArtifacts is enabled; this project
+          # ships without the updater plugin, so a missing file is not an error.
           if [ -f latest.json ]; then
             cp latest.json "updater-${{ matrix.slug }}.json"
+            echo "found=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Updater fragment not found after build (expected ./latest.json)"
-            find . -name 'latest.json' 2>/dev/null || true
-            exit 1
+            echo "No updater artifacts (createUpdaterArtifacts disabled) — skipping latest.json"
+            echo "found=false" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/upload-artifact@v4
+        if: steps.updater.outputs.found == 'true'
         with:
           name: updater-${{ matrix.slug }}
           path: updater-${{ matrix.slug }}.json
-          if-no-files-found: error
 
       - name: Build MSIX
         if: matrix.platform == 'windows-latest'
@@ -272,16 +275,32 @@ jobs:
           ref: master
 
       - uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           pattern: updater-*
           path: updater-fragments
           merge-multiple: true
 
       - name: Merge updater JSON
-        run: node scripts/merge-updater-json.mjs updater-fragments merged-latest.json
+        id: merge
+        shell: bash
+        run: |
+          if compgen -G "updater-fragments/*.json" > /dev/null; then
+            node scripts/merge-updater-json.mjs updater-fragments merged-latest.json
+            echo "have=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No updater fragments — this release ships without latest.json"
+            echo "have=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Consolidate release assets and publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-        run: node scripts/consolidate-github-release.mjs "${{ github.ref_name }}" merged-latest.json
+        shell: bash
+        run: |
+          if [ "${{ steps.merge.outputs.have }}" = "true" ]; then
+            node scripts/consolidate-github-release.mjs "${{ github.ref_name }}" merged-latest.json
+          else
+            node scripts/consolidate-github-release.mjs "${{ github.ref_name }}"
+          fi

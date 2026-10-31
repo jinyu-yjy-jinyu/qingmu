@@ -13,8 +13,12 @@ import { join } from 'node:path'
 import { pipeline } from 'node:stream/promises'
 
 const [tag, mergedLatestPath] = process.argv.slice(2)
-if (!tag || !mergedLatestPath) {
-  console.error('Usage: node scripts/consolidate-github-release.mjs <tag> <merged-latest.json>')
+if (!tag) {
+  console.error(
+    'Usage: node scripts/consolidate-github-release.mjs <tag> [merged-latest.json]\n' +
+      '  merged-latest.json is optional: it is only produced (and uploaded) when the\n' +
+      '  build emits Tauri updater artifacts.',
+  )
   process.exit(1)
 }
 
@@ -110,10 +114,14 @@ try {
     gh(['api', '--method', 'DELETE', `repos/${repo}/releases/${release.id}`], { json: false })
   }
 
-  console.log(`Uploading merged latest.json`)
-  const latestUpload = join(tmp, 'latest.json')
-  copyFileSync(mergedLatestPath, latestUpload)
-  gh(['release', 'upload', tag, latestUpload, '--clobber'], { json: false })
+  if (mergedLatestPath) {
+    console.log(`Uploading merged latest.json`)
+    const latestUpload = join(tmp, 'latest.json')
+    copyFileSync(mergedLatestPath, latestUpload)
+    gh(['release', 'upload', tag, latestUpload, '--clobber'], { json: false })
+  } else {
+    console.log(`No updater manifest supplied — skipping latest.json upload`)
+  }
 
   console.log(`Publishing ${tag}`)
   gh(['release', 'edit', tag, '--draft=false', '--latest'], { json: false })
