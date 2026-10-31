@@ -1,8 +1,8 @@
-# MarkerOn — Screen Annotation Tool
+# 轻幕 — Screen Annotation Tool
 
 ## Intent
 
-MarkerOn is a lightweight (~1.5 MB) screen annotation tool built with Tauri v2 + Vue 3. It runs in the system tray and lets users instantly draw, highlight, and annotate anywhere on the desktop via keyboard shortcuts. Targets Windows and macOS.
+轻幕 (qingmu) is a lightweight (~1.5 MB) screen annotation tool built with Tauri v2 + Vue 3. It runs in the system tray and lets users instantly draw, highlight, and annotate anywhere on the desktop via keyboard shortcuts. Targets Windows and macOS.
 
 ## Tech Stack
 

@@ -14,9 +14,9 @@
 | 产品名(中文) | `轻幕` |
 | Rust crate | `lightcurtain` |
 | 应用 ID | `com.lightcurtain.app` |
-| 主页/源码标识 | MarkerOn(历史遗留,勿再用于新产品名) |
+| 主页/源码标识 | 旧品牌名(历史遗留,勿再用于新产品名) |
 
-**历史遗留警告**:仓库中仍残留 `AnnotPen` / `MarkerOn` / `annotpen.exe` 字样,例如
+**历史遗留警告**:仓库中仍残留 `AnnotPen` / 旧品牌英文标识 / `annotpen.exe` 字样,例如
 `scripts/build-portable.sh`、`scripts/consolidate-github-release.mjs`。
 这些是改名前的残留,**禁止**在新代码中继续使用,清理时需同步修正引用方。
 
