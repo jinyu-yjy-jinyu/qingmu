@@ -23,6 +23,7 @@ export interface KeyboardContext {
   textBoxPos: Ref<{ x: number; y: number } | null>
   currentTool: Ref<Tool>
   whiteboardMode: Ref<boolean>
+  spotlightActive: Ref<boolean>
   isDrawing: Ref<boolean>
   lastPointerX: () => number
   lastPointerY: () => number
@@ -45,6 +46,7 @@ export interface KeyboardActions {
   copyWhiteboard: () => void
   toggleToolbarPopupVisible: () => void
   commitCurrentTextBox: (cancel?: boolean) => void
+  toggleSpotlight: () => void
 }
 
 function modDown(e: KeyboardEvent): boolean {
@@ -124,7 +126,7 @@ export function createKeyDownHandler(ctx: KeyboardContext, actions: KeyboardActi
     if (ctx.showQuickColors.value) {
       if (shouldTriggerKeyboardCopy(e, ctx)) {
         e.preventDefault()
-        actions.copyScreen()
+        triggerKeyboardCopy(ctx, actions)
       } else if (e.key === 'Escape') {
         logActionEvent('quick colors closed', { reason: 'keyboard' })
         ctx.showQuickColors.value = false
@@ -215,6 +217,13 @@ export function createKeyDownHandler(ctx: KeyboardContext, actions: KeyboardActi
       return
     }
 
+    // Presentation spotlight — S toggles; Esc closes it before leaving the session.
+    if ((e.key === 's' || e.key === 'S') && !modDown(e)) {
+      logActionEvent('spotlight toggled', { reason: 'keyboard' })
+      actions.toggleSpotlight()
+      return
+    }
+
     // Whiteboard mode toggle
     if (e.key === 'w' || e.key === 'W') {
       if (ctx.whiteboardMode.value) {
@@ -263,7 +272,10 @@ export function createKeyDownHandler(ctx: KeyboardContext, actions: KeyboardActi
       logActionEvent('redo', { reason: 'keyboard', shortcut: 'mod+y' })
       actions.redo()
     } else if (e.key === 'Escape') {
-      if (ctx.whiteboardMode.value) {
+      if (ctx.spotlightActive.value) {
+        logActionEvent('spotlight toggled', { reason: 'keyboard', shortcut: 'escape' })
+        actions.toggleSpotlight()
+      } else if (ctx.whiteboardMode.value) {
         logActionEvent('whiteboard exit requested', { reason: 'keyboard', shortcut: 'escape' })
         actions.exitWhiteboardMode()
       } else {

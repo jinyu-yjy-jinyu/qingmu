@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  applyViewportTransform,
   createDefaultViewport,
   screenToWorld,
   worldToScreen,
@@ -38,6 +39,28 @@ describe('drawingViewport', () => {
       const world = screenToWorld(vp, 200, 100)
       expect(world.x).toBe(200)
       expect(world.y).toBe(100)
+    })
+  })
+
+  describe('applyViewportTransform', () => {
+    it('matches worldToScreen for the same viewport', () => {
+      const vp = { offsetX: 120, offsetY: -40, zoom: 2 }
+      const dpr = 2
+      const calls: number[][] = []
+      const ctx = {
+        setTransform: (...args: number[]) => calls.push(args),
+      } as unknown as CanvasRenderingContext2D
+
+      applyViewportTransform(ctx, vp, dpr)
+
+      expect(calls).toHaveLength(1)
+      const [a, b, c, d, e, f] = calls[0]
+      expect([a, b, c, d]).toEqual([dpr * vp.zoom, 0, 0, dpr * vp.zoom])
+
+      const world = { x: 37, y: -11 }
+      const screen = worldToScreen(vp, world.x, world.y)
+      expect(a * world.x + c * world.y + e).toBeCloseTo(screen.x * dpr, 6)
+      expect(b * world.x + d * world.y + f).toBeCloseTo(screen.y * dpr, 6)
     })
   })
 

@@ -184,6 +184,16 @@ export function hitTestAction(action: DrawAction, p: Point, extraMargin = 0): bo
     return false
   }
 
+  if (action.tool === 'triangle') {
+    if (pts.length >= 3) {
+      const d1 = distToSeg(p.x, p.y, pts[0].x, pts[0].y, pts[1].x, pts[1].y)
+      const d2 = distToSeg(p.x, p.y, pts[1].x, pts[1].y, pts[2].x, pts[2].y)
+      const d3 = distToSeg(p.x, p.y, pts[2].x, pts[2].y, pts[0].x, pts[0].y)
+      if (Math.min(d1, d2, d3) <= threshold) return true
+    }
+    return false
+  }
+
   if (action.tool === 'rect') {
     if (pts.length >= 2) {
       const rect = action.rectHit ?? {

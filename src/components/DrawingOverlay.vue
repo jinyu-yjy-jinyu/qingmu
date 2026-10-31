@@ -117,6 +117,7 @@ const toolLabelMap = computed<Record<Tool, string>>(() => ({
   rect: t('tools.rect'),
   ellipse: t('tools.ellipse'),
   line: t('tools.line'),
+  triangle: t('tools.triangle'),
   eraser: t('tools.eraser'),
   text: t('tools.text'),
   stamp: t('tools.stamp'),
@@ -265,6 +266,11 @@ function onContextMenu(e: MouseEvent) {
 }
 
 function onWheel(e: WheelEvent) {
+  if (spotlightActive.value) {
+    e.preventDefault()
+    setSpotlightRadius(spotlightRadius.value + (e.deltaY < 0 ? 24 : -24))
+    return
+  }
   if (whiteboardMode.value && !e.ctrlKey) {
     e.preventDefault()
     // Anchor zooming must use the baked viewport (window-origin compensation
@@ -305,6 +311,11 @@ const {
   setAngleSnapStep,
   setEraserMode,
   isDrawing,
+  spotlightActive,
+  spotlightRadius,
+  toggleSpotlight,
+  setSpotlightPosition,
+  setSpotlightRadius,
   startDraw,
   draw,
   drawBatch,
@@ -817,6 +828,10 @@ let capturedPointerId: number | null = null
 /** Suppress Control+click context menu after Control+drag (macOS maps ctrl+click to right-click). */
 let pointerDownClient: { x: number; y: number } | null = null
 let pointerMovedSinceDown = false
+// Bumped whenever a gesture ends. `onPointerDown` awaits IPC before starting a
+// stroke, so a pointerup that lands during the await must invalidate the
+// pending gesture instead of leaving an unterminated stroke behind.
+let pointerGestureToken = 0
 const CONTEXT_MENU_DRAG_THRESHOLD_PX = 5
 let lastPointerX = 0
 let lastPointerY = 0
@@ -1183,6 +1198,7 @@ function releaseCapturedPointer() {
 }
 
 function resetPointerGestureState() {
+  pointerGestureToken++
   pointerDownClient = null
   pointerMovedSinceDown = false
 }
@@ -1213,6 +1229,7 @@ function finishActivePointerInteraction() {
 }
 
 async function onPointerDown(e: PointerEvent) {
+  if (spotlightActive.value) return
   if (whiteboardMode.value) {
     if (e.button === 2) {
       beginPan(e)
@@ -1232,10 +1249,12 @@ async function onPointerDown(e: PointerEvent) {
 
   pointerDownClient = { x: e.clientX, y: e.clientY }
   pointerMovedSinceDown = false
+  const gestureToken = ++pointerGestureToken
   invalidateCopyModifierForPointerInteraction()
 
   if (!overlayLayoutReady.value) {
     await scheduleOverlayResize()
+    if (gestureToken !== pointerGestureToken) return
   }
 
   lastPointerX = e.clientX
@@ -1255,6 +1274,7 @@ async function onPointerDown(e: PointerEvent) {
   }
 
   await ensureToolbarAboveOverlay()
+  if (gestureToken !== pointerGestureToken) return
 
   // Drag when over an element; optional: require Ctrl/Command (scheme A — modifier on element wins over rect draw)
   if (canStartElementDrag(e)) {
@@ -1298,7 +1318,7 @@ async function onPointerDown(e: PointerEvent) {
 
   capturePointer(e)
   const startWorld = toWorld(e.clientX, e.clientY)
-  startDraw(startWorld)
+  startDraw(startWorld, e.pointerType === 'pen' ? e.pressure : undefined)
 }
 
 function onPointerMove(e: PointerEvent) {
@@ -1332,6 +1352,7 @@ function onPointerMove(e: PointerEvent) {
   if (!isDrawing.value) {
     mousePos.value.x = e.clientX
     mousePos.value.y = e.clientY
+    setSpotlightPosition(e.clientX, e.clientY)
 
     if (
       active.value &&
@@ -1368,13 +1389,13 @@ function onPointerMove(e: PointerEvent) {
     drawBatch(
       coalesced.map((p) => {
         const w = toWorld(p.clientX, p.clientY)
-        return { x: w.x, y: w.y }
+        return { x: w.x, y: w.y, pressure: e.pointerType === 'pen' ? p.pressure : undefined }
       }),
       isPerfect,
     )
   } else {
     const world = toWorld(e.clientX, e.clientY)
-    draw(world, isPerfect)
+    draw(world, isPerfect, e.pointerType === 'pen' ? e.pressure : undefined)
   }
 }
 
@@ -1401,7 +1422,7 @@ function onPointerUp(e: PointerEvent) {
     return
   }
 
-  endDraw()
+  endDraw({ recognizeShape: !e.altKey })
   if (wasDrawing) {
     logDiagnostic('pointer', 'stroke end', {
       pointerType: e.pointerType,
@@ -1481,6 +1502,7 @@ const onKeyDown = createKeyDownHandler(
     textBoxPos,
     currentTool,
     whiteboardMode,
+    spotlightActive,
     isDrawing,
     lastPointerX: () => lastPointerX,
     lastPointerY: () => lastPointerY,
@@ -1505,6 +1527,10 @@ const onKeyDown = createKeyDownHandler(
     },
     toggleToolbarPopupVisible,
     commitCurrentTextBox,
+    toggleSpotlight: () => {
+      const nowActive = toggleSpotlight()
+      if (nowActive) setSpotlightPosition(lastPointerX, lastPointerY)
+    },
     exitDrawing: () => {
       exitDrawing('keyboard')
     },

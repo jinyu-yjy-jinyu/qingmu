@@ -10,7 +10,8 @@ import {
   hitTestAction,
   snapPointToAngle,
 } from './drawingGeometry'
-import { drawActionDirect, drawLaserTrail } from './drawingRender'
+import { drawActionDirect, drawLaserTrail, drawPressureStroke, drawSpotlight } from './drawingRender'
+import { recognizeStroke } from './shapeRecognition'
 import { normalizeTextOutline } from '../constants/textOutline'
 import { stampFontSizeFromWidth } from '../constants/stamp'
 import { isLaserTrailGone, pruneAgedLaserPoints } from '../constants/laser'
@@ -105,6 +106,34 @@ export function useDrawing(
   const angleSnapStep = ref<15 | 30 | 45>(15)
   const eraserMode = ref<EraserMode>('stroke')
 
+  // Presentation spotlight: dims the overlay except a soft circle around the
+  // pointer. It is a viewing aid, so it is excluded from copy/export.
+  const spotlightActive = ref(false)
+  const spotlightX = ref(0)
+  const spotlightY = ref(0)
+  const spotlightRadius = ref(160)
+
+  function toggleSpotlight(): boolean {
+    spotlightActive.value = !spotlightActive.value
+    previewDirty = true
+    scheduleRender()
+    return spotlightActive.value
+  }
+
+  function setSpotlightPosition(x: number, y: number) {
+    if (!spotlightActive.value) return
+    spotlightX.value = x
+    spotlightY.value = y
+    previewDirty = true
+    scheduleRender()
+  }
+
+  function setSpotlightRadius(radius: number) {
+    spotlightRadius.value = Math.max(48, Math.min(1200, radius))
+    previewDirty = true
+    scheduleRender()
+  }
+
   function setEraserMode(mode: EraserMode) {
     eraserMode.value = mode
   }
@@ -118,6 +147,12 @@ export function useDrawing(
     if (tool === 'highlighter') return highlighterLineWidth(w)
     if (tool === 'eraser') return eraserLineWidth(w)
     return w
+  }
+
+  /** Stylus pressure 0..1, clamped so a light touch still leaves visible ink. */
+  function clampPenPressure(value: number | undefined, fallback = 0.5): number {
+    if (value == null || !Number.isFinite(value)) return fallback
+    return Math.max(0.05, Math.min(1, value))
   }
 
   /**
@@ -594,6 +629,23 @@ export function useDrawing(
     strokeCtx.lineCap = 'round'
     strokeCtx.lineJoin = 'round'
 
+    if (action.pressures && action.pressures.length === pts.length) {
+      const from = Math.max(0, lastBakedPtIdx)
+      strokeCtx.fillStyle = action.color
+      drawPressureStroke(
+        strokeCtx,
+        pts.slice(from, targetIdx + 1),
+        action.pressures.slice(from, targetIdx + 1),
+        action.lineWidth,
+        // Butt-capped ribbon slices join edge-to-edge, so a semi-transparent
+        // stroke does not double-darken at chunk boundaries.
+        false,
+      )
+      strokeCtx.restore()
+      lastBakedPtIdx = targetIdx
+      return
+    }
+
     strokeCtx.beginPath()
 
     if (lastBakedPtIdx === 0) {
@@ -657,8 +709,8 @@ export function useDrawing(
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     if (preview && useDragCanvas && dragCanvas) {
-      const drawX = Math.round((dragBboxX + dragOffsetX - vp.offsetX) * vp.zoom * dpr)
-      const drawY = Math.round((dragBboxY + dragOffsetY - vp.offsetY) * vp.zoom * dpr)
+      const drawX = Math.round(((dragBboxX + dragOffsetX) * vp.zoom + vp.offsetX) * dpr)
+      const drawY = Math.round(((dragBboxY + dragOffsetY) * vp.zoom + vp.offsetY) * dpr)
       ctx.drawImage(dragCanvas, drawX, drawY, dragCanvas.width * vp.zoom, dragCanvas.height * vp.zoom)
       if (laserStrokes.length > 0) {
         applyViewportTransform(ctx, vp, dpr)
@@ -701,6 +753,16 @@ export function useDrawing(
     }
 
     ctx.restore()
+
+    if (spotlightActive.value) {
+      const cssW = canvas.width / dpr
+      const cssH = canvas.height / dpr
+      ctx.save()
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      drawSpotlight(ctx, cssW, cssH, spotlightX.value, spotlightY.value, spotlightRadius.value)
+      ctx.restore()
+    }
+
     previewDirty = false
   }
 
@@ -820,7 +882,7 @@ export function useDrawing(
     invalidateCache()
   }
 
-  function startDraw(point: Point) {
+  function startDraw(point: Point, pressure?: number) {
     if (currentTool.value === 'text' || currentTool.value === 'stamp') return
     isDrawing.value = true
     if (redoStack.length > 0) {
@@ -835,13 +897,19 @@ export function useDrawing(
     const width = resolveDrawLineWidth(currentTool.value)
     const startPoint: Point = currentTool.value === 'laser' ? { x: point.x, y: point.y, t: performance.now() } : point
 
-    currentAction.value = {
+    const action: DrawAction = {
       tool: currentTool.value,
       color: currentTool.value === 'eraser' ? 'rgba(0,0,0,1)' : currentColor.value,
       lineWidth: width,
       opacity,
       points: [startPoint],
     }
+    // Mouse and touch keep a constant width; only a real stylus reports a
+    // meaningful pressure value.
+    if (currentTool.value === 'pen' && pressure != null) {
+      action.pressures = [clampPenPressure(pressure)]
+    }
+    currentAction.value = action
     previewDirty = true
     if (currentTool.value === 'laser') {
       ensureLaserAnimation()
@@ -858,8 +926,8 @@ export function useDrawing(
     scheduleRender()
   }
 
-  function draw(point: Point, isPerfect = false) {
-    drawBatch([point], isPerfect)
+  function draw(point: Point, isPerfect = false, pressure?: number) {
+    drawBatch([{ x: point.x, y: point.y, pressure }], isPerfect)
   }
 
   function drawBatch(points: ArrayLike<InputPointLike>, isPerfect = false) {
@@ -889,6 +957,10 @@ export function useDrawing(
         if (dx * dx + dy * dy < minDist) continue
         const nextPoint: Point = action.tool === 'laser' ? { x, y, t: performance.now() } : { x, y }
         pts.push(nextPoint)
+        if (action.pressures) {
+          const previous = action.pressures[action.pressures.length - 1] ?? 0.5
+          action.pressures.push(clampPenPressure(point.pressure, previous))
+        }
         last = nextPoint
         appended = true
       }
@@ -935,11 +1007,22 @@ export function useDrawing(
     scheduleRender()
   }
 
-  function endDraw() {
+  function endDraw(options: { recognizeShape?: boolean } = {}) {
     if (!isDrawing.value) return
     const action = currentAction.value
     if (!action) return
     isDrawing.value = false
+
+    // Convert a confident freehand gesture into a standard shape. The live
+    // preview stays as ink; the committed action snaps on release.
+    if (action.tool === 'pen' && options.recognizeShape) {
+      const shape = recognizeStroke(action.points)
+      if (shape) {
+        action.tool = shape.kind
+        action.points = shape.points
+        action.pressures = undefined
+      }
+    }
 
     if (action.tool !== 'laser') {
       const pad = Math.max(20, action.lineWidth / 2 + 10)
@@ -1103,6 +1186,16 @@ export function useDrawing(
     ctx.lineWidth = action.lineWidth
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
+
+    if (action.pressures && action.pressures.length === pts.length) {
+      const from = Math.max(0, lastBakedPtIdx)
+      // Butt cap: this tail abuts the baked slice at `lastBakedPtIdx`, and a
+      // round cap here would overlap the baked ink and double-darken it.
+      ctx.fillStyle = action.color
+      drawPressureStroke(ctx, pts.slice(from), action.pressures.slice(from), action.lineWidth, false)
+      ctx.restore()
+      return
+    }
 
     ctx.beginPath()
     if (lastBakedPtIdx === 0) {
@@ -1560,8 +1653,10 @@ export function useDrawing(
     ctx.drawImage(canvas, 0, 0)
 
     if (laserStrokes.length > 0) {
+      // The copied history bitmap is already in screen space, so the laser
+      // overlay must use the same viewport transform as the live preview.
       const dpr = getEffectiveDpr()
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      applyViewportTransform(ctx, currentViewport(), dpr)
       drawLaserStrokes(ctx)
       ctx.setTransform(1, 0, 0, 1, 0, 0)
     }
@@ -1676,6 +1771,11 @@ export function useDrawing(
     angleSnapStep,
     setEraserMode,
     isDrawing,
+    spotlightActive,
+    spotlightRadius,
+    toggleSpotlight,
+    setSpotlightPosition,
+    setSpotlightRadius,
     /** Active stroke width (for tests / diagnostics); null when not drawing. */
     getActiveStrokeLineWidth: () => currentAction.value?.lineWidth ?? null,
     getActiveStrokeFirstPoint: () => {

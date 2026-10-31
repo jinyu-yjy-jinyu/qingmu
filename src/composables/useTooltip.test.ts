@@ -12,6 +12,7 @@ function createTooltip() {
     rect: 'Rectangle',
     ellipse: 'Ellipse',
     line: 'Line',
+    triangle: 'Triangle',
     eraser: 'Eraser',
     text: 'Text',
     stamp: 'Stamp',

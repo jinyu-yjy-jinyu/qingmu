@@ -21,6 +21,7 @@ function createContext(overrides: Partial<KeyboardContext> = {}): KeyboardContex
     textBoxPos: ref(null),
     currentTool: ref<Tool>('pen'),
     whiteboardMode: ref(false),
+    spotlightActive: ref(false),
     isDrawing: ref(false),
     lastPointerX: () => 200,
     lastPointerY: () => 200,
@@ -55,6 +56,7 @@ function createActions(): KeyboardActions & { calls: Record<string, unknown[][]>
     copyWhiteboard: make('copyWhiteboard') as KeyboardActions['copyWhiteboard'],
     toggleToolbarPopupVisible: make('toggleToolbarPopupVisible') as KeyboardActions['toggleToolbarPopupVisible'],
     commitCurrentTextBox: make('commitCurrentTextBox') as KeyboardActions['commitCurrentTextBox'],
+    toggleSpotlight: make('toggleSpotlight') as KeyboardActions['toggleSpotlight'],
   }
 }
 

@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   Square,
   Circle,
+  Triangle,
   Minus,
   Eraser,
   Type,
@@ -32,9 +33,14 @@ export const TOOL_DEFS: ToolDef[] = [
   { id: 'stamp', icon: ListOrdered, key: 'N' },
 ]
 
-export const TOOL_ICON_MAP: Record<Tool, Component> = Object.fromEntries(
-  TOOL_DEFS.map((d) => [d.id, d.icon]),
-) as Record<Tool, Component>
+/**
+ * Every tool needs an icon, including tools that are only produced by shape
+ * recognition (`triangle`) and therefore never appear in the toolbar.
+ */
+export const TOOL_ICON_MAP: Record<Tool, Component> = {
+  ...(Object.fromEntries(TOOL_DEFS.map((d) => [d.id, d.icon])) as Record<string, Component>),
+  triangle: Triangle,
+} as Record<Tool, Component>
 
 export const WIDTH_PRESETS: number[] = [1, 2, 3, 5, 8]
 
@@ -51,7 +57,7 @@ export interface ToolLineWidths {
   text: number
 }
 
-const STROKE_TOOLS = new Set<Tool>(['pen', 'laser', 'arrow', 'rect', 'ellipse', 'line'])
+const STROKE_TOOLS = new Set<Tool>(['pen', 'laser', 'arrow', 'rect', 'ellipse', 'line', 'triangle'])
 
 export function toolLineWidthGroup(tool: Tool): LineWidthGroup {
   if (tool === 'highlighter') return 'highlighter'

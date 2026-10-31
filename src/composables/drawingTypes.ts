@@ -1,4 +1,15 @@
-export type Tool = 'pen' | 'highlighter' | 'laser' | 'arrow' | 'rect' | 'ellipse' | 'line' | 'eraser' | 'text' | 'stamp'
+export type Tool =
+  | 'pen'
+  | 'highlighter'
+  | 'laser'
+  | 'arrow'
+  | 'rect'
+  | 'ellipse'
+  | 'line'
+  | 'triangle'
+  | 'eraser'
+  | 'text'
+  | 'stamp'
 
 export interface Point {
   x: number
@@ -12,6 +23,8 @@ export interface InputPointLike {
   y?: number
   clientX?: number
   clientY?: number
+  /** Stylus pressure 0..1 from a coalesced pointer event. */
+  pressure?: number
 }
 
 export type TextOutlineColorMode = 'auto' | 'fixed'
@@ -29,6 +42,8 @@ export interface DrawAction {
   lineWidth: number
   opacity: number
   points: Point[]
+  /** Per-point stylus pressure, parallel to `points` (pen strokes only). */
+  pressures?: number[]
   attachedErasers?: DrawAction[]
   text?: string
   fontSize?: number

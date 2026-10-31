@@ -10,6 +10,7 @@ export default {
     rect: '矩形',
     ellipse: '椭圆',
     line: '直线',
+    triangle: '三角形',
     eraser: '橡皮擦',
     text: '文字',
     stamp: '序号',
@@ -263,6 +264,7 @@ export default {
   about: {
     tagline: '轻量级屏幕标注工具',
     author: '作者',
+    version: '版本',
     license: '开源协议',
     feedback: '反馈问题',
     sponsor: '赞助开发',

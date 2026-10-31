@@ -18,10 +18,11 @@ export function clampZoom(zoom: number): number {
 
 /**
  * Set the canvas transform so a world-space point (wx, wy) is drawn at screen
- * physical pixel ((wx - offsetX) * zoom * dpr, (wy - offsetY) * zoom * dpr).
+ * physical pixel ((wx * zoom + offsetX) * dpr, (wy * zoom + offsetY) * dpr).
+ * This is the inverse of `screenToWorld`, and matches `worldToScreen`.
  */
 export function applyViewportTransform(ctx: CanvasRenderingContext2D, vp: ViewportState, dpr: number): void {
-  ctx.setTransform(dpr * vp.zoom, 0, 0, dpr * vp.zoom, -vp.offsetX * dpr * vp.zoom, -vp.offsetY * dpr * vp.zoom)
+  ctx.setTransform(dpr * vp.zoom, 0, 0, dpr * vp.zoom, vp.offsetX * dpr, vp.offsetY * dpr)
 }
 
 export function screenToWorld(vp: ViewportState, x: number, y: number): { x: number; y: number } {

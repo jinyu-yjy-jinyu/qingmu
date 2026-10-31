@@ -36,6 +36,116 @@ export function drawLine(ctx: CanvasRenderingContext2D, start: Point, end: Point
   ctx.stroke()
 }
 
+function clampPressure(value: number): number {
+  if (!Number.isFinite(value)) return 0.5
+  return Math.max(0.05, Math.min(1, value))
+}
+
+function pressureWidth(pressures: number[], index: number, baseWidth: number): number {
+  return baseWidth * (0.4 + 0.8 * clampPressure(pressures[index] ?? 0.5))
+}
+
+/** Unit normal per point, averaged from the neighbouring segment directions. */
+function ribbonNormals(pts: Point[]): Array<{ x: number; y: number }> {
+  const normals: Array<{ x: number; y: number }> = []
+  let last = { x: 0, y: 0 }
+  for (let i = 0; i < pts.length; i++) {
+    const prev = pts[Math.max(0, i - 1)]
+    const next = pts[Math.min(pts.length - 1, i + 1)]
+    let dx = next.x - prev.x
+    let dy = next.y - prev.y
+    if (i > 0 && i < pts.length - 1) {
+      // Average unit directions so a corner does not skew the width.
+      const l1 = Math.hypot(pts[i].x - prev.x, pts[i].y - prev.y)
+      const l2 = Math.hypot(next.x - pts[i].x, next.y - pts[i].y)
+      if (l1 > 0 && l2 > 0) {
+        dx = (pts[i].x - prev.x) / l1 + (next.x - pts[i].x) / l2
+        dy = (pts[i].y - prev.y) / l1 + (next.y - pts[i].y) / l2
+      }
+    }
+    const len = Math.hypot(dx, dy)
+    if (len === 0) {
+      normals.push(last)
+    } else {
+      last = { x: -dy / len, y: dx / len }
+      normals.push(last)
+    }
+  }
+  return normals
+}
+
+/**
+ * Build the filled outline of a variable-width stroke: a closed ribbon around
+ * the polyline, half `pressureWidth` to each side. Filling this once keeps
+ * semi-transparent strokes from double-darkening at segment joints, and the
+ * result is a single Path2D that can be cached.
+ */
+export function pressureRibbonPath(
+  pts: Point[],
+  pressures: number[],
+  baseWidth: number,
+  roundCaps: boolean,
+): Path2D {
+  const path = new Path2D()
+  if (pts.length < 2) {
+    const r = pressureWidth(pressures, 0, baseWidth) / 2
+    path.arc(pts[0].x, pts[0].y, r, 0, Math.PI * 2)
+    return path
+  }
+
+  const normals = ribbonNormals(pts)
+  const half = (i: number) => pressureWidth(pressures, i, baseWidth) / 2
+  const left = (i: number) => ({
+    x: pts[i].x + normals[i].x * half(i),
+    y: pts[i].y + normals[i].y * half(i),
+  })
+  const right = (i: number) => ({
+    x: pts[i].x - normals[i].x * half(i),
+    y: pts[i].y - normals[i].y * half(i),
+  })
+
+  path.moveTo(left(0).x, left(0).y)
+  for (let i = 1; i < pts.length; i++) path.lineTo(left(i).x, left(i).y)
+
+  const lastIdx = pts.length - 1
+  if (roundCaps) {
+    // End cap bulges forward along travel; start cap backward. Trace the
+    // semicircle on the outward side, not through the stroke interior.
+    const a = Math.atan2(normals[lastIdx].y, normals[lastIdx].x)
+    path.arc(pts[lastIdx].x, pts[lastIdx].y, half(lastIdx), a, a + Math.PI, true)
+  } else {
+    path.lineTo(right(lastIdx).x, right(lastIdx).y)
+  }
+
+  for (let i = lastIdx - 1; i >= 0; i--) path.lineTo(right(i).x, right(i).y)
+
+  if (roundCaps) {
+    const a = Math.atan2(normals[0].y, normals[0].x)
+    path.arc(pts[0].x, pts[0].y, half(0), a + Math.PI, a, true)
+  }
+
+  path.closePath()
+  return path
+}
+
+/**
+ * Pen stroke whose width follows stylus pressure. Rendered as one filled
+ * ribbon so neighbouring widths blend without seams and semi-transparent ink
+ * does not double-darken at joints. Mouse strokes never reach this path.
+ * `roundCaps=false` (incremental baking) joins slices edge-to-edge without
+ * overlapping, keeping the bake seamless too.
+ */
+export function drawPressureStroke(
+  ctx: CanvasRenderingContext2D,
+  points: Point[],
+  pressures: number[],
+  baseWidth: number,
+  roundCaps = true,
+) {
+  if (points.length === 0) return
+  ctx.fill(pressureRibbonPath(points, pressures, baseWidth, roundCaps))
+}
+
 export function drawArrow(ctx: CanvasRenderingContext2D, start: Point, end: Point) {
   const dx = end.x - start.x
   const dy = end.y - start.y
@@ -75,6 +185,15 @@ export function drawArrow(ctx: CanvasRenderingContext2D, start: Point, end: Poin
 export function drawRect(ctx: CanvasRenderingContext2D, start: Point, end: Point) {
   ctx.beginPath()
   ctx.rect(start.x, start.y, end.x - start.x, end.y - start.y)
+  ctx.stroke()
+}
+
+export function drawTriangle(ctx: CanvasRenderingContext2D, a: Point, b: Point, c: Point) {
+  ctx.beginPath()
+  ctx.moveTo(a.x, a.y)
+  ctx.lineTo(b.x, b.y)
+  ctx.lineTo(c.x, c.y)
+  ctx.closePath()
   ctx.stroke()
 }
 
@@ -176,6 +295,69 @@ export function drawStamp(ctx: CanvasRenderingContext2D, action: DrawAction) {
 }
 
 /**
+ * Draw a freehand action through a cached Path2D when the action has a bbox
+ * (committed history), otherwise re-path the live stroke.
+ */
+function drawCachedFreehand(
+  ctx: CanvasRenderingContext2D,
+  action: DrawAction,
+  pts: Point[],
+  pathCache?: WeakMap<DrawAction, Path2D>,
+) {
+  let path = pathCache?.get(action)
+  if (!path && action.bbox) {
+    path = new Path2D()
+    path.moveTo(pts[0].x, pts[0].y)
+    if (pts.length === 2) {
+      path.lineTo(pts[1].x, pts[1].y)
+    } else {
+      for (let k = 1; k < pts.length - 1; k++) {
+        const midX = (pts[k].x + pts[k + 1].x) / 2
+        const midY = (pts[k].y + pts[k + 1].y) / 2
+        path.quadraticCurveTo(pts[k].x, pts[k].y, midX, midY)
+      }
+      path.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y)
+    }
+    pathCache?.set(action, path)
+  }
+  if (path) {
+    ctx.stroke(path)
+  } else {
+    drawFreehand(ctx, pts)
+  }
+}
+
+/**
+ * Dim everything except a soft-edged circle around (x, y). Drawn on the
+ * preview canvas; `destination-out` reveals the history canvas and desktop
+ * underneath, so committed ink inside the hole stays visible.
+ */
+export function drawSpotlight(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+  radius: number,
+) {
+  ctx.save()
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.62)'
+  ctx.fillRect(0, 0, width, height)
+
+  ctx.globalCompositeOperation = 'destination-out'
+  const inner = Math.max(0, radius * 0.72)
+  const gradient = ctx.createRadialGradient(x, y, inner, x, y, radius)
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 1)')
+  gradient.addColorStop(0.85, 'rgba(0, 0, 0, 0.92)')
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
+  ctx.fillStyle = gradient
+  ctx.beginPath()
+  ctx.arc(x, y, radius, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+}
+
+/**
  * Draw an action with full style setup (opacity, composite operation, stroke/fill).
  * Handles all tool types including eraser composite mode.
  */
@@ -222,33 +404,25 @@ export function drawActionDirect(
   }
 
   switch (action.tool) {
-    case 'pen':
-    case 'highlighter':
-    case 'laser':
-    case 'eraser': {
-      let path = pathCache?.get(action)
-      if (!path && action.bbox) {
-        path = new Path2D()
-        path.moveTo(pts[0].x, pts[0].y)
-        if (pts.length === 2) {
-          path.lineTo(pts[1].x, pts[1].y)
-        } else {
-          for (let k = 1; k < pts.length - 1; k++) {
-            const midX = (pts[k].x + pts[k + 1].x) / 2
-            const midY = (pts[k].y + pts[k + 1].y) / 2
-            path.quadraticCurveTo(pts[k].x, pts[k].y, midX, midY)
-          }
-          path.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y)
+    case 'pen': {
+      if (action.pressures && action.pressures.length === pts.length && pts.length > 1) {
+        let path = pathCache?.get(action)
+        if (!path && action.bbox) {
+          path = pressureRibbonPath(pts, action.pressures, action.lineWidth, true)
+          pathCache?.set(action, path)
         }
-        pathCache?.set(action, path)
-      }
-      if (path) {
-        ctx.stroke(path)
+        if (!path) path = pressureRibbonPath(pts, action.pressures, action.lineWidth, true)
+        ctx.fill(path)
       } else {
-        drawFreehand(ctx, pts)
+        drawCachedFreehand(ctx, action, pts, pathCache)
       }
       break
     }
+    case 'highlighter':
+    case 'laser':
+    case 'eraser':
+      drawCachedFreehand(ctx, action, pts, pathCache)
+      break
     case 'line':
       drawLine(ctx, pts[0], pts[1])
       break
@@ -260,6 +434,9 @@ export function drawActionDirect(
       break
     case 'ellipse':
       drawEllipse(ctx, pts[0], pts[1])
+      break
+    case 'triangle':
+      if (pts.length >= 3) drawTriangle(ctx, pts[0], pts[1], pts[2])
       break
   }
 

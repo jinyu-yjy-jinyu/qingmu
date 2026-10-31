@@ -10,6 +10,7 @@ export default {
     rect: 'Rectangle',
     ellipse: 'Ellipse',
     line: 'Line',
+    triangle: 'Triangle',
     eraser: 'Eraser',
     text: 'Text',
     stamp: 'Stamp',
@@ -267,6 +268,7 @@ export default {
   about: {
     tagline: 'Lightweight screen annotation tool',
     author: 'Author',
+    version: 'Version',
     license: 'License',
     feedback: 'Feedback',
     sponsor: 'Support development',
