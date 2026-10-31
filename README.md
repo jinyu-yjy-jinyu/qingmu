@@ -5,11 +5,11 @@
     <a href="./README_zh.md">中文</a>
   </p>
   <p>
-    <a href="https://github.com/ifer47/markeron/actions/workflows/ci.yml"><img src="https://github.com/ifer47/markeron/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-    <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/github/v/tag/ifer47/markeron?label=latest&color=blue" alt="Release" /></a>
-    <a href="https://github.com/ifer47/markeron/releases"><img src="https://img.shields.io/github/downloads/ifer47/markeron/total" alt="Downloads" /></a>
+    <a href="https://github.com/jinyu-yjy-jinyu/qingmu/actions/workflows/ci.yml"><img src="https://github.com/jinyu-yjy-jinyu/qingmu/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+    <a href="https://github.com/jinyu-yjy-jinyu/qingmu/releases/latest"><img src="https://img.shields.io/github/v/tag/jinyu-yjy-jinyu/qingmu?label=latest&color=blue" alt="Release" /></a>
+    <a href="https://github.com/jinyu-yjy-jinyu/qingmu/releases"><img src="https://img.shields.io/github/downloads/jinyu-yjy-jinyu/qingmu/total" alt="Downloads" /></a>
     <a href="./LICENSE"><img src="https://img.shields.io/badge/license-暂未开源-red" alt="License" /></a>
-    <a href="https://github.com/ifer47/markeron/stargazers"><img src="https://img.shields.io/github/stars/ifer47/markeron?style=social" alt="Stars" /></a>
+    <a href="https://github.com/jinyu-yjy-jinyu/qingmu/stargazers"><img src="https://img.shields.io/github/stars/jinyu-yjy-jinyu/qingmu?style=social" alt="Stars" /></a>
     <a href="https://markeron.cn/"><img src="https://img.shields.io/badge/website-docs-0ea5e9" alt="Website" /></a>
     <a href="https://www.bilibili.com/video/BV17ygy67ETV"><img src="https://img.shields.io/badge/Bilibili-tutorial(CN)-fb7299" alt="Bilibili tutorial (Chinese)" /></a>
     <a href="https://afdian.com/a/markeron"><img src="https://img.shields.io/badge/爱发电-赞助-946ce6" alt="Sponsor on 爱发电" /></a>
@@ -27,13 +27,13 @@
 ## Download
 
 <p>
-  <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/badge/Windows-x64-0078D4?logo=windows&logoColor=white" alt="Windows" /></a>
-  <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/badge/macOS-ARM64-000000?logo=apple&logoColor=white" alt="macOS ARM64" /></a>
-  <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/badge/macOS-x64-666666?logo=apple&logoColor=white" alt="macOS x64" /></a>
+  <a href="https://github.com/jinyu-yjy-jinyu/qingmu/releases/latest"><img src="https://img.shields.io/badge/Windows-x64-0078D4?logo=windows&logoColor=white" alt="Windows" /></a>
+  <a href="https://github.com/jinyu-yjy-jinyu/qingmu/releases/latest"><img src="https://img.shields.io/badge/macOS-ARM64-000000?logo=apple&logoColor=white" alt="macOS ARM64" /></a>
+  <a href="https://github.com/jinyu-yjy-jinyu/qingmu/releases/latest"><img src="https://img.shields.io/badge/macOS-x64-666666?logo=apple&logoColor=white" alt="macOS x64" /></a>
   <a href="https://get.microsoft.com/installer/download/9n6623x973jv?referrer=appbadge"><img src="https://img.shields.io/badge/Microsoft_Store-轻幕-0078D4?logo=microsoftstore&logoColor=white" alt="Microsoft Store" /></a>
 </p>
 
-**[Download Latest Release](https://github.com/ifer47/markeron/releases/latest)** — pick the installer for your platform from the assets list. Windows also ships a **portable zip** (`*_x64_portable.zip`): extract and run — config stays under `data\` next to the exe (no AppData).
+**[Download Latest Release](https://github.com/jinyu-yjy-jinyu/qingmu/releases/latest)** — pick the installer for your platform from the assets list. Windows also ships a **portable zip** (`*_x64_portable.zip`): extract and run — config stays under `data\` next to the exe (no AppData).
 
 Windows users can also install the Microsoft Store version with WinGet:
 
@@ -162,7 +162,7 @@ In **Settings → General** (toolbar display, click-through, and stroke width �
 
 ## Feedback & Issues
 
-- **Bug reports:** Settings → **Diagnostics** → export a report, then open a [GitHub Issue](https://github.com/ifer47/markeron/issues)
+- **Bug reports:** Settings → **Diagnostics** → export a report, then open a [GitHub Issue](https://github.com/jinyu-yjy-jinyu/qingmu/issues)
 - **Privacy:** [PRIVACY.md](./PRIVACY.md)
 
 ## Development

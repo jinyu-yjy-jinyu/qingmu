@@ -23,11 +23,11 @@ If a direct WinGet community manifest is submitted later, use (replace `X.Y.Z` /
 - Publisher: `ifer47`
 - Homepage: `https://markeron.cn/`
 - License: `MIT`
-- Release URL: `https://github.com/ifer47/markeron/releases/tag/vX.Y.Z`
-- Installer URL: `https://github.com/ifer47/markeron/releases/download/vX.Y.Z/AnnotPen_X.Y.Z_x64_zh-CN.msi`
+- Release URL: `https://github.com/jinyu-yjy-jinyu/qingmu/releases/tag/vX.Y.Z`
+- Installer URL: `https://github.com/jinyu-yjy-jinyu/qingmu/releases/download/vX.Y.Z/AnnotPen_X.Y.Z_x64_zh-CN.msi`
 - Installer SHA256: _(compute from the published MSI)_
 
 Example values for **v2.2.0** (verify against the live release assets before use):
 
-- Release URL: `https://github.com/ifer47/markeron/releases/tag/v2.2.0`
-- Installer URL: `https://github.com/ifer47/markeron/releases/download/v2.2.0/AnnotPen_2.2.0_x64_zh-CN.msi`
+- Release URL: `https://github.com/jinyu-yjy-jinyu/qingmu/releases/tag/v2.2.0`
+- Installer URL: `https://github.com/jinyu-yjy-jinyu/qingmu/releases/download/v2.2.0/AnnotPen_2.2.0_x64_zh-CN.msi`

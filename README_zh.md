@@ -5,11 +5,11 @@
     <a href="./README.md">English</a>
   </p>
   <p>
-    <a href="https://github.com/ifer47/markeron/actions/workflows/ci.yml"><img src="https://github.com/ifer47/markeron/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-    <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/github/v/tag/ifer47/markeron?label=latest&color=blue" alt="Release" /></a>
-    <a href="https://github.com/ifer47/markeron/releases"><img src="https://img.shields.io/github/downloads/ifer47/markeron/total" alt="Downloads" /></a>
+    <a href="https://github.com/jinyu-yjy-jinyu/qingmu/actions/workflows/ci.yml"><img src="https://github.com/jinyu-yjy-jinyu/qingmu/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+    <a href="https://github.com/jinyu-yjy-jinyu/qingmu/releases/latest"><img src="https://img.shields.io/github/v/tag/jinyu-yjy-jinyu/qingmu?label=latest&color=blue" alt="Release" /></a>
+    <a href="https://github.com/jinyu-yjy-jinyu/qingmu/releases"><img src="https://img.shields.io/github/downloads/jinyu-yjy-jinyu/qingmu/total" alt="Downloads" /></a>
     <a href="./LICENSE"><img src="https://img.shields.io/badge/license-暂未开源-red" alt="License" /></a>
-    <a href="https://github.com/ifer47/markeron/stargazers"><img src="https://img.shields.io/github/stars/ifer47/markeron?style=social" alt="Stars" /></a>
+    <a href="https://github.com/jinyu-yjy-jinyu/qingmu/stargazers"><img src="https://img.shields.io/github/stars/jinyu-yjy-jinyu/qingmu?style=social" alt="Stars" /></a>
     <a href="https://markeron.cn/"><img src="https://img.shields.io/badge/网站-文档-0ea5e9" alt="网站" /></a>
     <a href="https://www.bilibili.com/video/BV17ygy67ETV"><img src="https://img.shields.io/badge/Bilibili-使用教程-fb7299" alt="Bilibili 使用教程" /></a>
     <a href="https://afdian.com/a/markeron"><img src="https://img.shields.io/badge/爱发电-赞助-946ce6" alt="爱发电赞助" /></a>
@@ -27,13 +27,13 @@
 ## 下载安装
 
 <p>
-  <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/badge/Windows-x64-0078D4?logo=windows&logoColor=white" alt="Windows" /></a>
-  <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/badge/macOS-ARM64-000000?logo=apple&logoColor=white" alt="macOS ARM64" /></a>
-  <a href="https://github.com/ifer47/markeron/releases/latest"><img src="https://img.shields.io/badge/macOS-x64-666666?logo=apple&logoColor=white" alt="macOS x64" /></a>
+  <a href="https://github.com/jinyu-yjy-jinyu/qingmu/releases/latest"><img src="https://img.shields.io/badge/Windows-x64-0078D4?logo=windows&logoColor=white" alt="Windows" /></a>
+  <a href="https://github.com/jinyu-yjy-jinyu/qingmu/releases/latest"><img src="https://img.shields.io/badge/macOS-ARM64-000000?logo=apple&logoColor=white" alt="macOS ARM64" /></a>
+  <a href="https://github.com/jinyu-yjy-jinyu/qingmu/releases/latest"><img src="https://img.shields.io/badge/macOS-x64-666666?logo=apple&logoColor=white" alt="macOS x64" /></a>
   <a href="https://get.microsoft.com/installer/download/9n6623x973jv?referrer=appbadge"><img src="https://img.shields.io/badge/微软商店-轻幕-0078D4?logo=microsoftstore&logoColor=white" alt="Microsoft Store" /></a>
 </p>
 
-**[下载最新版本](https://github.com/ifer47/markeron/releases/latest)** — 在 Assets 列表中选择对应平台的安装包下载。Windows 另提供 **绿色免安装版**（`*_x64_portable.zip`）：解压即用，配置写在程序目录下的 `data\`，不写系统 AppData。
+**[下载最新版本](https://github.com/jinyu-yjy-jinyu/qingmu/releases/latest)** — 在 Assets 列表中选择对应平台的安装包下载。Windows 另提供 **绿色免安装版**（`*_x64_portable.zip`）：解压即用，配置写在程序目录下的 `data\`，不写系统 AppData。
 
 Windows 用户也可以通过 WinGet 安装微软商店版本：
 
@@ -162,7 +162,7 @@ winget install --id 9N6623X973JV --source msstore
 
 ## 反馈与 Issue
 
-- **报 Bug：** 设置 → **诊断** → 导出报告，再到 [GitHub Issues](https://github.com/ifer47/markeron/issues) 提交
+- **报 Bug：** 设置 → **诊断** → 导出报告，再到 [GitHub Issues](https://github.com/jinyu-yjy-jinyu/qingmu/issues) 提交
 - **隐私政策：** [PRIVACY.md](./PRIVACY.md)
 
 ## 开发构建

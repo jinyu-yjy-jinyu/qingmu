@@ -6,12 +6,12 @@
   "license": "暂未开源",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/jinyu-yjy-jinyu/qingmu.git"
   },
   "bugs": {
-    "url": ""
+    "url": "https://github.com/jinyu-yjy-jinyu/qingmu/issues"
   },
-  "homepage": "",
+  "homepage": "https://github.com/jinyu-yjy-jinyu/qingmu#readme",
   "private": true,
   "engines": {
     "node": "24.15.0",
