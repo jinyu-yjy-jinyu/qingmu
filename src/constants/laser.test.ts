@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 import {
-  LASER_DECAY_LENGTH,
   LASER_DECAY_MS,
   easeOut,
   isLaserTrailGone,

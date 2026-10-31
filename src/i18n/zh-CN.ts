@@ -69,6 +69,7 @@ export default {
   },
   whiteboard: {
     newBoard: '新建白板',
+    boardName: '白板{letter}',
     maxReached: '已达上限（26 个白板）',
     delete: '删除',
     deleteTitle: '删除白板',
@@ -144,6 +145,9 @@ export default {
     whiteboardPreserveDrawings: '按 W 切换时保留',
     whiteboardPreserveDrawingsDesc:
       '开启后，按 W 进入或退出白板模式时会保留当前白板内容；关闭后，每次切换白板都会从空白画布开始。',
+    whiteboardBoundaryless: '无边界白板',
+    whiteboardBoundarylessDesc:
+      '开启后白板不再铺满不透明白底，桌面内容会透出，且画布可覆盖全部显示器、平移到其它屏幕继续绘制；关闭后恢复为纯白画布并限制在当前显示器内。',
     whiteboardSection: '白板与内容',
     whiteboardSectionDesc:
       '默认进入选择屏幕叠加或白底画布。退出标注后保留：再次进入时恢复上次内容。按 W 切换时保留：在标注模式内切换屏幕/白板时不重置画布；关闭后每次按 W 进入白板均为空白画布。',
@@ -245,6 +249,9 @@ export default {
     wbPanDesc: '按住鼠标右键拖拽，或按住 <kbd class="help-kbd">空格</kbd> + 左键拖拽。',
     wbZoomLabel: '缩放画布',
     wbZoomDesc: '滚动鼠标滚轮缩放（0.25 倍 ~ 4 倍），以鼠标指针为中心。',
+    wbBoundaryLabel: '无边界白板',
+    wbBoundaryDesc:
+      '默认开启。白板保持透明，桌面内容透出；画布覆盖全部显示器，可平移到另一块屏幕继续绘制。如需恢复不透明白底并限制在当前显示器内，可在「设置 → 通用」中关闭。',
     wbClearLabel: '清空白板',
     wbClearDesc: '点击标签栏的垃圾桶按钮，确认后清空当前白板的所有内容。',
     wbExportLabel: '导出 PNG',

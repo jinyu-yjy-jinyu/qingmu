@@ -16,6 +16,9 @@ import { stampFontSizeFromWidth } from '../constants/stamp'
 import { isLaserTrailGone, pruneAgedLaserPoints } from '../constants/laser'
 import {
   applyViewportTransform,
+  clampZoom,
+  computeOffsetForAnchorZoom,
+  createDefaultViewport,
   screenToWorld as viewportScreenToWorld,
   worldToScreen as viewportWorldToScreen,
   type ViewportState,
@@ -295,6 +298,36 @@ export function useDrawing(
   let viewportOffsetX = 0
   let viewportOffsetY = 0
   let viewportZoom = 1
+  // Window-origin compensation, absorbed into the offsets above so rendering
+  // and input mapping stay on one code path. The boundaryless whiteboard moves
+  // the overlay window across the virtual desktop; without compensation every
+  // existing stroke would jump by the window-origin delta. `getViewport()`
+  // strips this shift so saved boards stay geometry-independent, and
+  // `hardReset()` drops it together with the content it was anchored to.
+  let geometryShiftX = 0
+  let geometryShiftY = 0
+
+  /** Viewport actually used for rendering and input mapping (includes geometry shift). */
+  function currentViewport(): ViewportState {
+    return { offsetX: viewportOffsetX, offsetY: viewportOffsetY, zoom: viewportZoom }
+  }
+
+  /**
+   * Absorb a window-origin delta (CSS px) so existing strokes keep their screen
+   * position when the overlay window moves. The caller passes the NEGATIVE of
+   * the window-origin delta.
+   */
+  function shiftViewportOrigin(dx: number, dy: number) {
+    if (dx === 0 && dy === 0) return
+    geometryShiftX += dx
+    geometryShiftY += dy
+    viewportOffsetX += dx
+    viewportOffsetY += dy
+    invalidateCache()
+    historyDirty = true
+    previewDirty = true
+    flushRender()
+  }
 
   let cacheCanvas: HTMLCanvasElement | null = null
   let cacheCtx: CanvasRenderingContext2D | null = null
@@ -509,7 +542,7 @@ export function useDrawing(
       const dpr = getEffectiveDpr()
       cacheCtx.setTransform(1, 0, 0, 1, 0, 0)
       cacheCtx.clearRect(0, 0, cacheCanvas.width, cacheCanvas.height)
-      applyViewportTransform(cacheCtx, getViewport(), dpr)
+      applyViewportTransform(cacheCtx, currentViewport(), dpr)
       for (let i = 0; i < history.length; i++) {
         if (history[i] === previewAction.value) continue
         drawActionOn(cacheCtx, history[i])
@@ -534,7 +567,7 @@ export function useDrawing(
       const dpr = getEffectiveDpr()
       strokeCtx.setTransform(1, 0, 0, 1, 0, 0)
       strokeCtx.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height)
-      applyViewportTransform(strokeCtx, getViewport(), dpr)
+      applyViewportTransform(strokeCtx, currentViewport(), dpr)
     }
     lastBakedPtIdx = 0
   }
@@ -601,7 +634,7 @@ export function useDrawing(
     const action = currentAction.value
     if (action && action.tool === 'eraser' && eraserMode.value === 'stroke' && action.points.length > 0) {
       const dpr = getEffectiveDpr()
-      applyViewportTransform(ctx, getViewport(), dpr)
+      applyViewportTransform(ctx, currentViewport(), dpr)
       drawActionDirect(ctx, action, pathCache)
     }
 
@@ -617,7 +650,7 @@ export function useDrawing(
     const action = currentAction.value
     const preview = previewAction.value
     const dpr = getEffectiveDpr()
-    const vp = getViewport()
+    const vp = currentViewport()
 
     ctx.save()
     ctx.setTransform(1, 0, 0, 1, 0, 0)
@@ -1154,8 +1187,10 @@ export function useDrawing(
   }
 
   function setViewport(vp: ViewportState) {
-    viewportOffsetX = vp.offsetX
-    viewportOffsetY = vp.offsetY
+    // `vp` is geometry-neutral (as produced by `getViewport` / saved boards);
+    // re-apply the live window-origin compensation on top.
+    viewportOffsetX = vp.offsetX + geometryShiftX
+    viewportOffsetY = vp.offsetY + geometryShiftY
     viewportZoom = vp.zoom
     invalidateCache()
     historyDirty = true
@@ -1163,16 +1198,40 @@ export function useDrawing(
     flushRender()
   }
 
+  /** Geometry-neutral viewport (board persistence form, without window-origin compensation). */
   function getViewport(): ViewportState {
-    return { offsetX: viewportOffsetX, offsetY: viewportOffsetY, zoom: viewportZoom }
+    return {
+      offsetX: viewportOffsetX - geometryShiftX,
+      offsetY: viewportOffsetY - geometryShiftY,
+      zoom: viewportZoom,
+    }
+  }
+
+  /**
+   * Geometry-neutral viewport that zooms around the world point under the
+   * cursor, or `null` when the zoom level does not change. Anchoring must use
+   * the baked (rendered) viewport — the neutral one is offset by the window
+   * origin compensation — while the returned offset is neutral so it can go
+   * through `setViewport`.
+   */
+  function zoomViewportAt(clientX: number, clientY: number, nextZoom: number): ViewportState | null {
+    const vp = currentViewport()
+    const clamped = clampZoom(nextZoom)
+    if (clamped === vp.zoom) return null
+    const baked = computeOffsetForAnchorZoom(vp, clientX, clientY, clamped)
+    return {
+      offsetX: baked.offsetX - geometryShiftX,
+      offsetY: baked.offsetY - geometryShiftY,
+      zoom: baked.zoom,
+    }
   }
 
   function screenToWorld(x: number, y: number): { x: number; y: number } {
-    return viewportScreenToWorld(getViewport(), x, y)
+    return viewportScreenToWorld(currentViewport(), x, y)
   }
 
   function worldToScreen(x: number, y: number): { x: number; y: number } {
-    return viewportWorldToScreen(getViewport(), x, y)
+    return viewportWorldToScreen(currentViewport(), x, y)
   }
 
   function captureState(): DrawingStateSnapshot {
@@ -1525,6 +1584,15 @@ export function useDrawing(
     dragOffsetX = 0
     dragOffsetY = 0
     clearStrokeCanvas()
+    // The canvas content is gone, so its window-origin compensation is
+    // meaningless for the next session: drop it and start from the default
+    // viewport. (Boards were already saved with a geometry-neutral viewport.)
+    geometryShiftX = 0
+    geometryShiftY = 0
+    const defaultView = createDefaultViewport()
+    viewportOffsetX = defaultView.offsetX
+    viewportOffsetY = defaultView.offsetY
+    viewportZoom = defaultView.zoom
     previewDirty = true
     markHistoryStacksChanged()
     flushRender()
@@ -1635,6 +1703,8 @@ export function useDrawing(
     redrawAll,
     setViewport,
     getViewport,
+    zoomViewportAt,
+    shiftViewportOrigin,
     screenToWorld,
     worldToScreen,
     captureState,

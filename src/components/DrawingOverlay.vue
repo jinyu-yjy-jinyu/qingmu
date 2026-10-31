@@ -7,12 +7,7 @@ import { useDrawing, type Tool, type DrawAction } from '../composables/useDrawin
 import { useWhiteboardManager, MAX_BOARDS, type WhiteboardEntry } from '../composables/useWhiteboardManager'
 import WhiteboardTabBar from './whiteboard/WhiteboardTabBar.vue'
 import WhiteboardConfirmDialog from './whiteboard/WhiteboardConfirmDialog.vue'
-import {
-  computeZoomFromWheel,
-  computeOffsetForAnchorZoom,
-  createDefaultViewport,
-  type ViewportState,
-} from '../composables/drawingViewport'
+import { computeZoomFromWheel, createDefaultViewport, type ViewportState } from '../composables/drawingViewport'
 import type { TextOutlineStyle } from '../composables/drawingTypes'
 import { useTooltip } from '../composables/useTooltip'
 import {
@@ -72,10 +67,11 @@ import {
   type DefaultEntryMode,
 } from '../utils/entryMode'
 import { logDiagnostic, logSessionEvent, logActionEvent } from '../utils/diagnosticEvents'
-import type { MonitorLogicalBounds } from '../utils/toolbarPosition'
-import { toolbarPopupScreenPosition } from '../utils/toolbarPosition'
+import type { MonitorLogicalBounds, PointerAnchorInfo } from '../utils/toolbarPosition'
+import { toolbarPopupScreenPosition, toolbarPopupScreenPositionAtScreenPoint } from '../utils/toolbarPosition'
 import { TOOLBAR_PANEL_WIDTH, getToolbarPanelHeight, rememberToolbarPanelHeight } from '../utils/toolbarWindow'
 import { resolveEraserMode, type EraserMode } from '../utils/eraserMode'
+import { resolveWhiteboardBoundaryless } from '../utils/boundaryless'
 import { useI18n } from '../i18n'
 
 const { t } = useI18n()
@@ -271,10 +267,10 @@ function onContextMenu(e: MouseEvent) {
 function onWheel(e: WheelEvent) {
   if (whiteboardMode.value && !e.ctrlKey) {
     e.preventDefault()
-    const vp = getViewport()
-    const nextZoom = computeZoomFromWheel(vp.zoom, e.deltaY)
-    if (nextZoom === vp.zoom) return
-    setViewport(computeOffsetForAnchorZoom(vp, e.clientX, e.clientY, nextZoom))
+    // Anchor zooming must use the baked viewport (window-origin compensation
+    // included); `zoomViewportAt` returns the neutral form for setViewport.
+    const next = zoomViewportAt(e.clientX, e.clientY, computeZoomFromWheel(getViewport().zoom, e.deltaY))
+    if (next) setViewport(next)
     return
   }
   if (!active.value || !e.ctrlKey) return
@@ -329,6 +325,8 @@ const {
   redrawAll,
   setViewport,
   getViewport,
+  zoomViewportAt,
+  shiftViewportOrigin,
   screenToWorld,
   worldToScreen,
   captureState,
@@ -385,11 +383,14 @@ function saveCurrentWhiteboard() {
 
 function restoreBoardIntoDrawing(board: WhiteboardEntry | null) {
   if (!board) return
-  setViewport(board.viewport)
   if (board.drawingState) {
     restoreState(board.drawingState)
+    setViewport(board.viewport)
   } else {
+    // Reset first so the board's viewport survives (hardReset also clears any
+    // stale window-origin compensation from the previous content).
     hardReset()
+    setViewport(board.viewport)
   }
 }
 
@@ -539,19 +540,37 @@ async function openToolbarPopupAtPointer(): Promise<void> {
 
   const panelW = TOOLBAR_PANEL_WIDTH
   const panelH = getToolbarPanelHeight()
+  // Prefer the pointer's real screen position and its monitor: under the
+  // boundaryless whiteboard the overlay client origin is the virtual-desktop
+  // corner, so converting client coords via a monitor origin would place the
+  // panel on the wrong screen. Falls back to the legacy client-anchor path when
+  // the anchor query fails.
+  let anchor: { x: number; y: number } | null = null
   let monitorBounds: MonitorLogicalBounds | null = null
   try {
-    monitorBounds = await invoke<MonitorLogicalBounds | null>('get_overlay_monitor_logical_bounds')
+    const info = await invoke<PointerAnchorInfo>('get_pointer_anchor_info')
+    anchor = { x: info.pointerX, y: info.pointerY }
+    monitorBounds = info.monitor
   } catch {
-    // non-fatal for positioning; still log client-side coords
+    // non-fatal; fall through to client-based anchoring
   }
-  const { left, top } = toolbarPopupScreenPosition(lastPointerX, lastPointerY, panelW, panelH, monitorBounds, {
-    width: window.innerWidth,
-    height: window.innerHeight,
-  })
-  const anchorScreen = monitorBounds
-    ? { x: monitorBounds.left + lastPointerX, y: monitorBounds.top + lastPointerY }
-    : null
+  let left: number
+  let top: number
+  if (anchor) {
+    ;({ left, top } = toolbarPopupScreenPositionAtScreenPoint(anchor.x, anchor.y, panelW, panelH, monitorBounds))
+  } else {
+    try {
+      monitorBounds = await invoke<MonitorLogicalBounds | null>('get_overlay_monitor_logical_bounds')
+    } catch {
+      // non-fatal for positioning; still log client-side coords
+    }
+    ;({ left, top } = toolbarPopupScreenPosition(lastPointerX, lastPointerY, panelW, panelH, monitorBounds, {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    }))
+  }
+  const anchorScreen =
+    anchor ?? (monitorBounds ? { x: monitorBounds.left + lastPointerX, y: monitorBounds.top + lastPointerY } : null)
   logActionEvent('toolbar popup opened', {
     pointerClient: { x: lastPointerX, y: lastPointerY },
     pointerScreen: pointerScreenKnown ? { x: lastScreenX, y: lastScreenY } : null,
@@ -665,9 +684,75 @@ async function syncWhiteboardMode(active: boolean) {
   }
 }
 
+/**
+ * Apply the boundaryless preference to the overlay window. Called on every
+ * whiteboard entry/exit because `activate_drawing` resets the window back to a
+ * single monitor before the frontend can correct it.
+ */
+async function syncWhiteboardBoundaryless(active: boolean) {
+  try {
+    await invoke('set_whiteboard_boundaryless', { active })
+  } catch (error) {
+    console.error('Failed to sync whiteboard boundaryless:', error)
+    logActionEvent('whiteboard boundaryless sync failed', { error: String(error) }, 'error')
+  }
+}
+
+/** Last seen overlay window origin (logical), for viewport compensation on geometry changes. */
+let lastOverlayOriginLogical: { x: number; y: number } | null = null
+
+async function readOverlayOriginLogical(): Promise<{ x: number; y: number } | null> {
+  try {
+    const win = getCurrentWindow()
+    const [pos, scale] = await Promise.all([win.outerPosition(), win.scaleFactor()])
+    const logical = pos.toLogical(scale)
+    return { x: logical.x, y: logical.y }
+  } catch (error) {
+    console.error('Failed to read overlay window origin:', error)
+    return null
+  }
+}
+
+/**
+ * Keep whiteboard strokes on the same screen position when the overlay window
+ * moves (boundaryless whiteboard enter/exit, display topology changes): the
+ * viewport absorbs the window-origin delta while the strokes stay put.
+ * Outside whiteboard mode it only refreshes the baseline so the next entry
+ * compensates from the correct origin.
+ */
+async function compensateViewportForGeometryChange(): Promise<void> {
+  const logical = await readOverlayOriginLogical()
+  if (!logical) return
+  const baseline = lastOverlayOriginLogical
+  lastOverlayOriginLogical = logical
+  if (!baseline || !whiteboardMode.value) return
+  const dx = logical.x - baseline.x
+  const dy = logical.y - baseline.y
+  if (dx !== 0 || dy !== 0) {
+    shiftViewportOrigin(-dx, -dy)
+    logActionEvent('whiteboard viewport shifted', { dx: -dx, dy: -dy })
+  }
+}
+
+let enteringWhiteboard = false
+
 async function enterWhiteboardMode(options?: { fromDefaultEntry?: boolean }) {
-  if (whiteboardMode.value) return
+  if (whiteboardMode.value || enteringWhiteboard) return
+  // Reentry guard: `resumeDrawingFromToolbar` awaits IPC, so a second W press
+  // during that window would otherwise run the whole entry sequence twice.
+  enteringWhiteboard = true
+  try {
+    await runEnterWhiteboardMode(options)
+  } finally {
+    enteringWhiteboard = false
+  }
+}
+
+async function runEnterWhiteboardMode(options?: { fromDefaultEntry?: boolean }) {
   await resumeDrawingFromToolbar()
+  // Snapshot the pre-expansion window origin so the geometry-changed event from
+  // the boundaryless move can compensate the viewport (strokes stay on screen).
+  lastOverlayOriginLogical = await readOverlayOriginLogical()
   whiteboardManager.ensureInitialBoard()
   const shouldClear = shouldClearWhiteboardOnEntry({
     whiteboardPreserveDrawings: whiteboardPreserveDrawings.value,
@@ -687,6 +772,7 @@ async function enterWhiteboardMode(options?: { fromDefaultEntry?: boolean }) {
   showQuickColors.value = false
   textBoxPos.value = null
   void syncWhiteboardMode(true)
+  void syncWhiteboardBoundaryless(whiteboardBoundaryless.value)
   currentTool.value = 'pen'
   logSessionEvent('whiteboard entered', {
     fromDefaultEntry: options?.fromDefaultEntry ?? false,
@@ -701,6 +787,7 @@ function exitWhiteboardMode() {
   }
   whiteboardMode.value = false
   void syncWhiteboardMode(false)
+  void syncWhiteboardBoundaryless(false)
   hardReset()
   if (!whiteboardPreserveDrawings.value) {
     saveCurrentWhiteboard()
@@ -718,6 +805,10 @@ const dragMode = ref<DragMode>('off')
 const pointerModDown = ref(false)
 const preserveDrawings = ref(false)
 const whiteboardPreserveDrawings = ref(true)
+/** Borderless whiteboard: transparent surface spanning the whole virtual desktop. */
+const whiteboardBoundaryless = ref(true)
+/** Opaque white sheet — the pre-boundless look, kept when the feature is off. */
+const whiteboardOpaque = computed(() => !whiteboardBoundaryless.value)
 let hoverRafId: number | null = null
 let isDragging = false
 let dragStartX = 0
@@ -1753,6 +1844,7 @@ onMounted(async () => {
   unlisteners.push(
     await listen('overlay-geometry-changed', () => {
       overlayLayoutReady.value = false
+      void compensateViewportForGeometryChange()
       void scheduleOverlayResize()
     }),
   )
@@ -1767,6 +1859,7 @@ onMounted(async () => {
     applyLineWidthsFromConfig(cfg.general)
     preserveDrawings.value = cfg.general?.preserveDrawings ?? false
     whiteboardPreserveDrawings.value = cfg.general?.whiteboardPreserveDrawings ?? true
+    whiteboardBoundaryless.value = resolveWhiteboardBoundaryless(cfg.general)
     setAngleSnapStep((cfg.general?.angleSnapStep as 15 | 30 | 45 | undefined) ?? 15)
     currentTheme = resolveThemePref(cfg.general)
     await applyTheme(currentTheme)
@@ -1785,6 +1878,14 @@ onMounted(async () => {
       // lineWidths: overlay is the sole writer; skip echo from our own save_general
       preserveDrawings.value = event.payload.general?.preserveDrawings ?? false
       whiteboardPreserveDrawings.value = event.payload.general?.whiteboardPreserveDrawings ?? true
+      const nextBoundaryless = resolveWhiteboardBoundaryless(event.payload.general)
+      if (nextBoundaryless !== whiteboardBoundaryless.value) {
+        whiteboardBoundaryless.value = nextBoundaryless
+        // Apply without a restart when the toggle changes mid-whiteboard.
+        if (whiteboardMode.value) {
+          void syncWhiteboardBoundaryless(nextBoundaryless)
+        }
+      }
       setAngleSnapStep((event.payload.general?.angleSnapStep as 15 | 30 | 45 | undefined) ?? 15)
       currentTheme = resolveThemePref(event.payload.general)
       void applyTheme(currentTheme)
@@ -1821,6 +1922,9 @@ onMounted(async () => {
           }
           whiteboardMode.value = false
           void syncWhiteboardMode(false)
+          // No boundaryless sync here: the backend has already left drawing mode,
+          // so `set_overlay_boundaryless` would no-op; the next `activate_drawing`
+          // restores single-monitor geometry.
           hardReset()
           if (!whiteboardPreserveDrawings.value) {
             saveCurrentWhiteboard()
@@ -2080,7 +2184,7 @@ function exitDrawing(reason: 'keyboard' | 'toolbar' | 'unknown' = 'unknown') {
     class="fixed top-0 left-0 w-screen h-screen z-99999"
     :class="[
       active && !penetrationMode ? 'pointer-events-auto' : 'pointer-events-none',
-      whiteboardMode ? 'bg-white' : '',
+      whiteboardMode && whiteboardOpaque ? 'bg-white' : '',
     ]"
     :style="active && !penetrationMode ? { cursor: canvasCursor } : undefined"
   >
@@ -2088,7 +2192,7 @@ function exitDrawing(reason: 'keyboard' | 'toolbar' | 'unknown' = 'unknown') {
       ref="historyCanvasRef"
       class="absolute top-0 left-0 w-full h-full pointer-events-none"
       style="contain: strict"
-      :style="whiteboardMode ? { backgroundColor: '#FFFFFF' } : undefined"
+      :style="whiteboardMode && whiteboardOpaque ? { backgroundColor: '#FFFFFF' } : undefined"
     />
     <canvas
       ref="previewCanvasRef"

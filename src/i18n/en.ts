@@ -69,6 +69,7 @@ export default {
   },
   whiteboard: {
     newBoard: 'New board',
+    boardName: 'Whiteboard {letter}',
     maxReached: 'Limit reached (26 boards)',
     delete: 'Delete',
     deleteTitle: 'Delete board',
@@ -146,6 +147,9 @@ export default {
     whiteboardPreserveDrawings: 'Keep on W toggle',
     whiteboardPreserveDrawingsDesc:
       'When enabled, pressing W to enter or exit whiteboard mode keeps the existing whiteboard content. Turn this off to start whiteboard mode with a clean canvas each time.',
+    whiteboardBoundaryless: 'Borderless whiteboard',
+    whiteboardBoundarylessDesc:
+      'When on, the whiteboard no longer paints an opaque white sheet — your desktop shows through, and the canvas spans every monitor so you can pan onto another screen and keep drawing. Turn it off for an opaque white canvas limited to the current monitor.',
     whiteboardSection: 'Whiteboard & content',
     whiteboardSectionDesc:
       'Default entry chooses screen overlay or whiteboard. Keep after exit restores your last session when you re-enter. Keep on W toggle preserves drawings when switching modes without exiting; turn off to start with a blank whiteboard each time you press W.',
@@ -249,6 +253,9 @@ export default {
     wbPanDesc: 'Hold the right mouse button and drag, or hold <kbd class="help-kbd">Space</kbd> + left-drag.',
     wbZoomLabel: 'Zoom canvas',
     wbZoomDesc: 'Scroll the mouse wheel to zoom (0.25× – 4×), centered on the cursor.',
+    wbBoundaryLabel: 'Borderless whiteboard',
+    wbBoundaryDesc:
+      'On by default. The whiteboard stays transparent so your desktop shows through, and the canvas spans every monitor — pan onto another screen and keep drawing. Turn it off in Settings → General for an opaque white canvas confined to the current monitor.',
     wbClearLabel: 'Clear board',
     wbClearDesc: 'Click the trash button in the tab bar and confirm to clear all content of the current board.',
     wbExportLabel: 'Export PNG',

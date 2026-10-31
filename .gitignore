@@ -43,6 +43,7 @@ codesign.cer
 dist_msix/
 *.msix
 *.msixbundle
+release-output/
 .agents/
 skills-lock.json
 

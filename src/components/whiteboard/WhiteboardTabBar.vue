@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, type ComponentPublicInstance } from 'vue'
 import type { WhiteboardEntry } from '../../composables/useWhiteboardManager'
 import { useI18n } from '../../i18n'
 
@@ -23,6 +23,14 @@ const emit = defineEmits<{
 const editingId = ref<string | null>(null)
 const draftName = ref('')
 const inputRef = ref<HTMLInputElement | null>(null)
+
+/**
+ * A string `ref` declared inside `v-for` receives an array of elements, so
+ * `inputRef.value.focus()` would throw. Bind the single editing input explicitly.
+ */
+function bindRenameInput(el: Element | ComponentPublicInstance | null) {
+  inputRef.value = el instanceof HTMLInputElement ? el : null
+}
 
 function startRename(id: string, name: string) {
   editingId.value = id
@@ -60,7 +68,7 @@ function cancelRename() {
       >
         <input
           v-if="editingId === board.id"
-          ref="inputRef"
+          :ref="bindRenameInput"
           v-model="draftName"
           class="whiteboard-tab__input"
           maxlength="50"

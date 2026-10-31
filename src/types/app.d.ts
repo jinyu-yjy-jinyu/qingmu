@@ -17,6 +17,8 @@ export interface AppConfig {
     locale?: string
     preserveDrawings: boolean
     whiteboardPreserveDrawings: boolean
+    /** Transparent whiteboard surface spanning every monitor; defaults to on. */
+    whiteboardBoundaryless: boolean
     angleSnapStep?: 15 | 30 | 45
     toolbarVisibility?: ToolbarVisibility
     defaultEntryMode?: DefaultEntryMode

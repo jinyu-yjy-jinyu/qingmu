@@ -5,6 +5,7 @@ import {
   migratePhysicalToLogical,
   overlayClientToScreenLogical,
   toolbarPopupScreenPosition,
+  toolbarPopupScreenPositionAtScreenPoint,
 } from './toolbarPosition'
 
 describe('overlayClientToScreenLogical', () => {
@@ -42,6 +43,40 @@ describe('toolbarPopupScreenPosition', () => {
     expect(with500.top).toBe(1080 - 500 - 12)
     expect(with234.top).toBe(1080 - 234 - 12)
     expect(with234.top - with500.top).toBe(266)
+  })
+})
+
+describe('toolbarPopupScreenPositionAtScreenPoint', () => {
+  it('centers the panel on an absolute screen point inside its monitor', () => {
+    const monitor = { left: 0, top: 0, width: 1920, height: 1080 }
+    expect(toolbarPopupScreenPositionAtScreenPoint(960, 540, 320, 234, monitor)).toEqual({
+      left: 960 - 160,
+      top: 540 - 117,
+    })
+  })
+
+  it('stays on a left-side secondary monitor instead of clamping to the primary (boundaryless regression)', () => {
+    // Boundaryless overlay spans [-1920..1920]; pointer at screen (-1000, 400)
+    // must anchor there, not be pulled into the primary monitor at 0..1920.
+    const secondary = { left: -1920, top: 0, width: 1920, height: 1080 }
+    const pos = toolbarPopupScreenPositionAtScreenPoint(-1000, 400, 320, 234, secondary)
+    expect(pos.left).toBe(-1160)
+    expect(pos.top).toBe(283)
+  })
+
+  it('clamps into the anchor monitor when the panel would overflow an edge', () => {
+    const monitor = { left: 0, top: 0, width: 1920, height: 1080 }
+    const pos = toolbarPopupScreenPositionAtScreenPoint(1900, 100, 320, 234, monitor)
+    expect(pos.left).toBe(1920 - 320 - 12)
+    // top = -17 would leave the monitor; clamps to the 12px margin.
+    expect(pos.top).toBe(12)
+  })
+
+  it('returns the unclamped centered position without monitor bounds', () => {
+    expect(toolbarPopupScreenPositionAtScreenPoint(-1000, 400, 320, 234, null)).toEqual({
+      left: -1160,
+      top: 283,
+    })
   })
 })
 

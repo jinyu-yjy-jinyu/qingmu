@@ -71,6 +71,7 @@ const props = defineProps<{
   eraserMode: EraserMode
   preserveDrawings: boolean
   whiteboardPreserveDrawings: boolean
+  whiteboardBoundaryless: boolean
   autoStartEnabled: boolean
   angleSnapStep: 15 | 30 | 45
 }>()
@@ -82,6 +83,7 @@ const emit = defineEmits<{
   'update:eraserMode': [value: EraserMode]
   'update:preserveDrawings': [value: boolean]
   'update:whiteboardPreserveDrawings': [value: boolean]
+  'update:whiteboardBoundaryless': [value: boolean]
   'update:autoStartEnabled': [value: boolean]
   'update:angleSnapStep': [value: 15 | 30 | 45]
 }>()
@@ -136,6 +138,7 @@ async function toggleAutoStart() {
         preserveDrawings: false,
         whiteboardPreserveDrawings: true,
         angleSnapStep: props.angleSnapStep,
+        whiteboardBoundaryless: true,
         autoStart: nextValue,
       }
     cfg.general.autoStart = nextValue
@@ -169,6 +172,7 @@ async function setDragMode(mode: DragMode) {
         dragMode: mode,
         preserveDrawings: false,
         whiteboardPreserveDrawings: true,
+        whiteboardBoundaryless: true,
         angleSnapStep: props.angleSnapStep,
       }
     cfg.general.dragMode = mode
@@ -189,6 +193,7 @@ async function setTheme(next: ThemePreference) {
         dragMode: props.dragMode,
         preserveDrawings: props.preserveDrawings,
         whiteboardPreserveDrawings: props.whiteboardPreserveDrawings,
+        whiteboardBoundaryless: props.whiteboardBoundaryless,
         angleSnapStep: props.angleSnapStep,
         theme: next,
       }
@@ -211,6 +216,7 @@ async function setEraserMode(mode: EraserMode) {
         eraserMode: mode,
         preserveDrawings: false,
         whiteboardPreserveDrawings: true,
+        whiteboardBoundaryless: true,
         angleSnapStep: props.angleSnapStep,
       }
     cfg.general.eraserMode = mode
@@ -231,6 +237,7 @@ async function setDefaultEntryMode(mode: DefaultEntryMode) {
         defaultEntryMode: mode,
         preserveDrawings: false,
         whiteboardPreserveDrawings: true,
+        whiteboardBoundaryless: true,
         angleSnapStep: props.angleSnapStep,
       }
     cfg.general.defaultEntryMode = mode
@@ -250,6 +257,7 @@ async function togglePreserveDrawings() {
         dragMode: props.dragMode,
         preserveDrawings: false,
         whiteboardPreserveDrawings: true,
+        whiteboardBoundaryless: true,
         angleSnapStep: props.angleSnapStep,
       }
     cfg.general.preserveDrawings = newValue
@@ -270,6 +278,7 @@ async function toggleWhiteboardPreserveDrawings() {
         dragMode: props.dragMode,
         preserveDrawings: false,
         whiteboardPreserveDrawings: true,
+        whiteboardBoundaryless: true,
         angleSnapStep: props.angleSnapStep,
       }
     cfg.general.whiteboardPreserveDrawings = newValue
@@ -277,6 +286,26 @@ async function toggleWhiteboardPreserveDrawings() {
     await invoke('save_general', { general: cfg.general })
   } catch (error) {
     console.error('Failed to save whiteboard preserve drawings setting:', error)
+  }
+}
+
+async function toggleWhiteboardBoundaryless() {
+  const newValue = !props.whiteboardBoundaryless
+  emit('update:whiteboardBoundaryless', newValue)
+  try {
+    const cfg = await invoke<AppConfig>('get_config')
+    if (!cfg.general)
+      cfg.general = {
+        dragMode: props.dragMode,
+        preserveDrawings: false,
+        whiteboardPreserveDrawings: true,
+        whiteboardBoundaryless: newValue,
+        angleSnapStep: props.angleSnapStep,
+      }
+    cfg.general.whiteboardBoundaryless = newValue
+    await invoke('save_general', { general: cfg.general })
+  } catch (error) {
+    console.error('Failed to save whiteboard boundaryless setting:', error)
   }
 }
 
@@ -290,6 +319,7 @@ async function toggleAngleSnapStep(step: (typeof snapStepOptions)[number]) {
         dragMode: props.dragMode,
         preserveDrawings: false,
         whiteboardPreserveDrawings: true,
+        whiteboardBoundaryless: true,
         angleSnapStep: step,
       }
     cfg.general.angleSnapStep = step
@@ -516,6 +546,24 @@ async function toggleAngleSnapStep(step: (typeof snapStepOptions)[number]) {
             />
           </button>
         </div>
+
+        <div class="settings-card-row settings-card-row--divided">
+          <span class="settings-text-label">{{ t('settings.whiteboardBoundaryless') }}</span>
+          <button
+            role="switch"
+            :aria-checked="whiteboardBoundaryless"
+            :aria-label="t('settings.whiteboardBoundaryless')"
+            class="relative w-8 h-4.5 rounded-full transition-colors duration-200 cursor-pointer border-none p-0 outline-none shadow-inner"
+            :class="whiteboardBoundaryless ? 'settings-toggle-on' : 'settings-toggle-off'"
+            @click="toggleWhiteboardBoundaryless"
+          >
+            <span
+              class="absolute top-0.5 left-0.5 size-3.5 rounded-full bg-white shadow-md transition-transform duration-200"
+              :class="whiteboardBoundaryless ? 'translate-x-3.5' : 'translate-x-0'"
+            />
+          </button>
+        </div>
+        <p class="settings-card-desc">{{ t('settings.whiteboardBoundarylessDesc') }}</p>
       </div>
     </div>
   </div>

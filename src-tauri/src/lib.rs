@@ -174,7 +174,6 @@ pub fn run() {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-
         .plugin(tauri_plugin_process::init())
         .manage(AppState {
             config: Mutex::new(AppConfig::default()),
@@ -187,6 +186,7 @@ pub fn run() {
             commands::get_config,
             commands::get_overlay_pointer_position,
             commands::get_overlay_monitor_logical_bounds,
+            commands::get_pointer_anchor_info,
             commands::is_pointer_over_toolbar_panel,
             commands::set_overlay_ignore_cursor_events,
             commands::save_shortcuts,
@@ -203,6 +203,7 @@ pub fn run() {
             commands::suppress_penetration,
             commands::raise_toolbar,
             commands::set_whiteboard_mode,
+            commands::set_whiteboard_boundaryless,
             commands::open_url,
             commands::reveal_settings_window,
             commands::is_portable,

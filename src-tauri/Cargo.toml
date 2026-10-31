@@ -6,6 +6,7 @@ authors = ["ifer47"]
 repository = ""
 license = "暂未开源"
 edition = "2021"
+rust-version = "1.88"
 
 [lib]
 name = "lightcurtain_lib"

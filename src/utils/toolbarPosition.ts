@@ -21,6 +21,13 @@ export interface MonitorLogicalBounds {
   height: number
 }
 
+/** Cursor position (screen-logical) and its containing monitor, from `get_pointer_anchor_info`. */
+export interface PointerAnchorInfo {
+  pointerX: number
+  pointerY: number
+  monitor: MonitorLogicalBounds | null
+}
+
 /** Overlay client (CSS) coords → screen logical position for toolbar window placement. */
 export function overlayClientToScreenLogical(
   clientX: number,
@@ -55,6 +62,33 @@ export function toolbarPopupScreenPosition(
     left: Math.max(margin, Math.min(clientX - panelWidth / 2, vw - panelWidth - margin)),
     top: Math.max(margin, Math.min(clientY - panelHeight / 2, vh - panelHeight - margin)),
   }
+}
+
+/**
+ * Screen-logical top-left for a popup centered on an absolute screen-logical point.
+ *
+ * Unlike `toolbarPopupScreenPosition` (which converts client coords via a monitor
+ * origin and therefore assumes the overlay client origin == monitor origin), the
+ * anchor here is already in screen coordinates, so it stays correct when the
+ * overlay client origin differs from any monitor origin — the boundaryless
+ * whiteboard window spans the whole virtual desktop. Without monitor bounds the
+ * result is returned unclamped: the anchor itself is on-screen and the backend
+ * re-clamps into the anchor's monitor.
+ */
+export function toolbarPopupScreenPositionAtScreenPoint(
+  screenX: number,
+  screenY: number,
+  panelWidth: number,
+  panelHeight: number,
+  monitor: MonitorLogicalBounds | null,
+  margin = 12,
+): { left: number; top: number } {
+  const left = screenX - panelWidth / 2
+  const top = screenY - panelHeight / 2
+  if (monitor) {
+    return clampToolbarWindowPosition(left, top, panelWidth, panelHeight, monitor, margin)
+  }
+  return { left, top }
 }
 
 /** Keep a toolbar panel fully inside the overlay monitor (logical coordinates). */

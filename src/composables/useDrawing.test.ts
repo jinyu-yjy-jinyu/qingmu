@@ -615,6 +615,70 @@ describe('useDrawing', () => {
     })
   })
 
+  describe('shiftViewportOrigin (window-origin compensation)', () => {
+    it('keeps screen↔world mapping for the same screen point across a window-origin delta', () => {
+      // Annotation on the primary monitor: stroke drawn at screen (500, 300).
+      drawing.setViewport({ offsetX: 0, offsetY: 0, zoom: 1 })
+      const worldBefore = drawing.screenToWorld(500, 300)
+      expect(worldBefore).toEqual({ x: 500, y: 300 })
+
+      // Boundaryless expansion moves the window origin by (-1920, 0); the
+      // viewport absorbs the NEGATIVE delta so the stroke stays on screen.
+      drawing.shiftViewportOrigin(1920, 0)
+
+      // The stroke still lands on the same screen position: its client anchor
+      // moves by +1920 while the window origin moves by -1920.
+      expect(drawing.worldToScreen(worldBefore.x, worldBefore.y)).toEqual({ x: 2420, y: 300 })
+      // The pointer at the same screen position still maps onto the same stroke.
+      expect(drawing.screenToWorld(2420, 300)).toEqual({ x: 500, y: 300 })
+    })
+
+    it('getViewport stays geometry-neutral while the shift is active', () => {
+      drawing.setViewport({ offsetX: 100, offsetY: 0, zoom: 1 })
+      drawing.shiftViewportOrigin(1920, 40)
+      // Saved boards must not bake the window-origin compensation in.
+      expect(drawing.getViewport()).toEqual({ offsetX: 100, offsetY: 0, zoom: 1 })
+      // And setViewport re-applies the live shift on top of the neutral value.
+      drawing.setViewport({ offsetX: 50, offsetY: -10, zoom: 1 })
+      expect(drawing.getViewport()).toEqual({ offsetX: 50, offsetY: -10, zoom: 1 })
+      expect(drawing.worldToScreen(0, 0)).toEqual({ x: 50 + 1920, y: -10 + 40 })
+    })
+
+    it('zero shift is a no-op', () => {
+      drawing.setViewport({ offsetX: 30, offsetY: 0, zoom: 1.5 })
+      drawing.shiftViewportOrigin(0, 0)
+      expect(drawing.getViewport()).toEqual({ offsetX: 30, offsetY: 0, zoom: 1.5 })
+      expect(drawing.worldToScreen(10, 10)).toEqual({ x: 10 * 1.5 + 30, y: 10 * 1.5 })
+    })
+
+    it('hardReset drops the shift and returns to the default viewport', () => {
+      drawing.shiftViewportOrigin(1920, 40)
+      drawing.hardReset()
+      expect(drawing.getViewport()).toEqual({ offsetX: 0, offsetY: 0, zoom: 1 })
+      // A fresh stroke drawn after the reset maps without any stale compensation.
+      expect(drawing.screenToWorld(500, 300)).toEqual({ x: 500, y: 300 })
+    })
+
+    it('zoomViewportAt anchors around the world point under the cursor even with an active shift', () => {
+      drawing.setViewport({ offsetX: 0, offsetY: 0, zoom: 1 })
+      drawing.shiftViewportOrigin(1920, 0)
+      // Pointer sits at client (2420, 300) = world (500, 300); zooming to 2x
+      // must keep that world point under the cursor (baked-space anchor).
+      const next = drawing.zoomViewportAt(2420, 300, 2)
+      expect(next).not.toBeNull()
+      drawing.setViewport(next!)
+      expect(drawing.worldToScreen(500, 300)).toEqual({ x: 2420, y: 300 })
+      // Persisted viewport stays neutral (both axes anchored at the cursor).
+      expect(drawing.getViewport()).toEqual({ offsetX: -500, offsetY: -300, zoom: 2 })
+    })
+
+    it('zoomViewportAt returns null when the zoom level does not change', () => {
+      drawing.setViewport({ offsetX: 0, offsetY: 0, zoom: 1 })
+      drawing.shiftViewportOrigin(1920, 0)
+      expect(drawing.zoomViewportAt(2420, 300, 1)).toBeNull()
+    })
+  })
+
   describe('captureState / restoreState', () => {
     it('round-trips drawing content across clearAll', () => {
       drawing.startDraw({ x: 10, y: 10 })

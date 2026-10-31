@@ -10,11 +10,11 @@ function setup(onSwitch = vi.fn()) {
 }
 
 describe('useWhiteboardManager', () => {
-  it('ensureInitialBoard creates the first board 白板A and makes it current', () => {
+  it('ensureInitialBoard creates the first board Whiteboard A and makes it current', () => {
     const { manager } = setup()
     manager.ensureInitialBoard()
     expect(manager.boards.value).toHaveLength(1)
-    expect(manager.boards.value[0].name).toBe('白板A')
+    expect(manager.boards.value[0].name).toBe('Whiteboard A')
     expect(manager.boards.value[0].letter).toBe('A')
     expect(manager.current.value?.id).toBe(manager.boards.value[0].id)
     expect(manager.current.value?.viewport).toEqual({ offsetX: 0, offsetY: 0, zoom: 1 })
@@ -32,7 +32,7 @@ describe('useWhiteboardManager', () => {
     manager.ensureInitialBoard()
     expect(manager.createBoard()).toBe(true)
     expect(manager.createBoard()).toBe(true)
-    expect(manager.boards.value.map((b) => b.name)).toEqual(['白板A', '白板B', '白板C'])
+    expect(manager.boards.value.map((b) => b.name)).toEqual(['Whiteboard A', 'Whiteboard B', 'Whiteboard C'])
     expect(manager.boards.value[2].letter).toBe('C')
     expect(manager.current.value?.letter).toBe('C')
   })

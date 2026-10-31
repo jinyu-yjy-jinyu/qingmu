@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { useI18n } from '../i18n'
 import { createDefaultViewport, type ViewportState } from './drawingViewport'
 import type { DrawingStateSnapshot } from './useDrawing'
 
@@ -22,15 +23,12 @@ export const MAX_BOARDS = 26
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 const MAX_NAME_LENGTH = 50
 
-function boardName(letter: string): string {
-  return `白板${letter}`
-}
-
 function emptyDrawingState(): DrawingStateSnapshot {
   return { history: [], undoStack: [], redoStack: [], laserStrokes: [] }
 }
 
 export function useWhiteboardManager(options: WhiteboardManagerOptions = {}) {
+  const { t } = useI18n()
   const boards = ref<WhiteboardEntry[]>([])
   const currentId = ref('')
 
@@ -40,7 +38,7 @@ export function useWhiteboardManager(options: WhiteboardManagerOptions = {}) {
     return {
       id: crypto.randomUUID(),
       letter,
-      name: boardName(letter),
+      name: t('whiteboard.boardName', { letter }),
       backgroundColor: '#FFFFFF',
       drawingState: null,
       viewport: createDefaultViewport(),

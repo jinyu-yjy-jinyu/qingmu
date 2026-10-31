@@ -65,6 +65,12 @@ fn default_auto_start() -> bool {
     true
 }
 
+/// Borderless whiteboard is opt-out: existing configs upgrade to the new
+/// behavior without a migration step.
+fn default_whiteboard_boundaryless() -> bool {
+    true
+}
+
 fn default_line_width() -> u32 {
     3
 }
@@ -179,6 +185,11 @@ pub struct GeneralConfig {
     pub preserve_drawings: bool,
     #[serde(default, rename = "whiteboardPreserveDrawings")]
     pub whiteboard_preserve_drawings: bool,
+    #[serde(
+        default = "default_whiteboard_boundaryless",
+        rename = "whiteboardBoundaryless"
+    )]
+    pub whiteboard_boundaryless: bool,
     #[serde(default = "default_angle_snap_step", rename = "angleSnapStep")]
     pub angle_snap_step: u16,
     #[serde(default, rename = "toolbarVisibility")]
@@ -204,6 +215,7 @@ impl Default for GeneralConfig {
             locale: None,
             preserve_drawings: false,
             whiteboard_preserve_drawings: true,
+            whiteboard_boundaryless: default_whiteboard_boundaryless(),
             angle_snap_step: default_angle_snap_step(),
             toolbar_visibility: ToolbarVisibility::Space,
             default_entry_mode: DefaultEntryMode::Screen,
@@ -515,6 +527,57 @@ mod tests {
             config.general.angle_snap_step
         );
         assert_eq!(parsed.general.theme, ThemePreference::Dark);
+        assert!(parsed.general.whiteboard_boundaryless);
+    }
+
+    #[test]
+    fn general_config_defaults_whiteboard_boundaryless() {
+        let general = GeneralConfig::default();
+        assert!(general.whiteboard_boundaryless);
+    }
+
+    #[test]
+    fn config_deserializes_missing_whiteboard_boundaryless_as_true() {
+        // An older config.json predating the field must opt into the new
+        // default instead of silently losing the feature.
+        let json = r#"{
+            "shortcuts": {
+                "toggleDrawing": "Ctrl+Shift+D",
+                "clearDrawing": "Ctrl+Shift+C"
+            },
+            "general": {
+                "whiteboardPreserveDrawings": true
+            }
+        }"#;
+        let config: AppConfig = serde_json::from_str(json).unwrap();
+        assert!(config.general.whiteboard_boundaryless);
+    }
+
+    #[test]
+    fn config_deserializes_whiteboard_boundaryless_false() {
+        let json = r#"{
+            "shortcuts": {
+                "toggleDrawing": "Ctrl+Shift+D",
+                "clearDrawing": "Ctrl+Shift+C"
+            },
+            "general": {
+                "whiteboardBoundaryless": false
+            }
+        }"#;
+        let config: AppConfig = serde_json::from_str(json).unwrap();
+        assert!(!config.general.whiteboard_boundaryless);
+    }
+
+    #[test]
+    fn whiteboard_boundaryless_roundtrip() {
+        for enabled in [true, false] {
+            let mut config = AppConfig::default();
+            config.general.whiteboard_boundaryless = enabled;
+            let json = serde_json::to_string(&config).unwrap();
+            assert!(json.contains(&format!("\"whiteboardBoundaryless\":{}", enabled)));
+            let parsed: AppConfig = serde_json::from_str(&json).unwrap();
+            assert_eq!(parsed.general.whiteboard_boundaryless, enabled);
+        }
     }
 
     #[test]
@@ -604,7 +667,7 @@ mod tests {
         assert_eq!(config.general.drag_mode(), DragMode::Off);
         assert_eq!(config.general.locale, None);
         assert!(!config.general.preserve_drawings);
-        assert_eq!(config.general.whiteboard_preserve_drawings, true);
+        assert!(config.general.whiteboard_preserve_drawings);
         assert_eq!(config.general.angle_snap_step, 15);
     }
 

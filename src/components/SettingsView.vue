@@ -7,6 +7,7 @@ import { resolveDragMode, type DragMode } from '../utils/dragMode'
 import { applyTheme, watchSystemTheme, type ThemePreference } from '../composables/useAppTheme'
 import { resolveDefaultEntryMode, type DefaultEntryMode } from '../utils/entryMode'
 import { resolveEraserMode, type EraserMode } from '../utils/eraserMode'
+import { resolveWhiteboardBoundaryless } from '../utils/boundaryless'
 import { isEnabled } from '@tauri-apps/plugin-autostart'
 import { reconcileAutoStartState, resolveAutoStart } from '../utils/autoStart'
 import { isInstalledMode, supportsAutostart } from '../utils/portable'
@@ -241,6 +242,7 @@ const defaultEntryMode = ref<DefaultEntryMode>('screen')
 const eraserMode = ref<EraserMode>('stroke')
 const preserveDrawings = ref(false)
 const whiteboardPreserveDrawings = ref(true)
+const whiteboardBoundaryless = ref(true)
 const angleSnapStep = ref<15 | 30 | 45>(15)
 
 function resolveThemePref(general?: AppConfig['general']): ThemePreference {
@@ -271,6 +273,7 @@ onMounted(async () => {
   eraserMode.value = resolveEraserMode(cfg.general)
   preserveDrawings.value = cfg.general?.preserveDrawings ?? false
   whiteboardPreserveDrawings.value = cfg.general?.whiteboardPreserveDrawings ?? true
+  whiteboardBoundaryless.value = resolveWhiteboardBoundaryless(cfg.general)
   angleSnapStep.value = (cfg.general?.angleSnapStep as 15 | 30 | 45 | undefined) ?? 15
   autoStartEnabled.value = resolveAutoStart(cfg.general)
   await reconcileAutoStartWithOs(cfg)
@@ -284,6 +287,7 @@ onMounted(async () => {
   unlistenConfigChanged = await listen<AppConfig>('config-changed', (event) => {
     autoStartEnabled.value = resolveAutoStart(event.payload.general)
     theme.value = resolveThemePref(event.payload.general)
+    whiteboardBoundaryless.value = resolveWhiteboardBoundaryless(event.payload.general)
     void applyTheme(theme.value)
   })
 })
@@ -501,6 +505,7 @@ onUnmounted(() => {
         :eraser-mode="eraserMode"
         :preserve-drawings="preserveDrawings"
         :whiteboard-preserve-drawings="whiteboardPreserveDrawings"
+        :whiteboard-boundaryless="whiteboardBoundaryless"
         :auto-start-enabled="autoStartEnabled"
         :angle-snap-step="angleSnapStep"
         @update:theme="theme = $event"
@@ -509,6 +514,7 @@ onUnmounted(() => {
         @update:eraser-mode="eraserMode = $event"
         @update:preserve-drawings="preserveDrawings = $event"
         @update:whiteboard-preserve-drawings="whiteboardPreserveDrawings = $event"
+        @update:whiteboard-boundaryless="whiteboardBoundaryless = $event"
         @update:auto-start-enabled="autoStartEnabled = $event"
         @update:angle-snap-step="angleSnapStep = $event"
       />
@@ -729,6 +735,10 @@ onUnmounted(() => {
               <div class="help-row help-row-block">
                 <span class="help-label">{{ t('help.wbZoomLabel') }}</span>
                 <span class="help-desc" v-html="t('help.wbZoomDesc')" />
+              </div>
+              <div class="help-row help-row-block">
+                <span class="help-label">{{ t('help.wbBoundaryLabel') }}</span>
+                <span class="help-desc" v-html="t('help.wbBoundaryDesc')" />
               </div>
               <div class="help-row help-row-block">
                 <span class="help-label">{{ t('help.wbClearLabel') }}</span>

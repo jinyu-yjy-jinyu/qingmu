@@ -176,6 +176,133 @@ pub fn setup_overlay_size(app: &AppHandle) {
     }
 }
 
+/// Resize the overlay to span the whole virtual desktop (borderless whiteboard),
+/// or back to the cursor's monitor when `active` is false.
+///
+/// The overlay window is all the webview can paint into, so a canvas that should
+/// extend beyond one monitor needs a window that does too. Enabling also lifts
+/// the cursor confinement to that monitor; disabling restores both.
+///
+/// No-ops outside drawing mode and when no monitor list is available, leaving
+/// the current geometry untouched.
+pub fn set_overlay_boundaryless(app: &AppHandle, state: &AppState, active: bool) {
+    if current_mode(state) != OverlayMode::Drawing {
+        log_backend_event(
+            state,
+            "session",
+            "whiteboard boundaryless skipped: overlay not in drawing mode",
+            None,
+            "warn",
+        );
+        return;
+    }
+
+    if !active {
+        setup_overlay_size(app);
+        // `setup_overlay_size` ends in the click-through state it uses while the overlay
+        // is hidden; drawing mode needs pointer events back (mirrors `activate_drawing`).
+        if let Some(window) = app.get_webview_window("overlay") {
+            set_ignore_cursor_events(&window, false);
+        }
+        monitor::apply_drawing_cursor_clip();
+        notify_overlay_geometry_changed(app);
+        log_backend_event(
+            state,
+            "session",
+            "whiteboard boundaryless disabled",
+            None,
+            "info",
+        );
+        return;
+    }
+
+    let Some(window) = app.get_webview_window("overlay") else {
+        log_backend_event(
+            state,
+            "session",
+            "whiteboard boundaryless skipped: overlay window unavailable",
+            None,
+            "warn",
+        );
+        return;
+    };
+    let Some((x, y, w, h)) = monitor::get_virtual_desktop_rect(app) else {
+        log_backend_event(
+            state,
+            "session",
+            "whiteboard boundaryless skipped: virtual desktop rect unavailable",
+            None,
+            "warn",
+        );
+        return;
+    };
+
+    #[cfg(target_os = "macos")]
+    {
+        // Detach before moving the overlay so an attached toolbar is not dragged
+        // by the parent's set_position / set_size (mirrors `setup_overlay_size`).
+        if let Some(toolbar) = app.get_webview_window("toolbar") {
+            crate::macos::detach_toolbar_ns_window_from_overlay(&toolbar);
+        }
+        // Overlay geometry is in logical points on macOS.
+        let scale = window.scale_factor().unwrap_or(1.0);
+        window
+            .set_position(tauri::LogicalPosition::new(
+                x as f64 / scale,
+                y as f64 / scale,
+            ))
+            .ok();
+        window
+            .set_size(tauri::LogicalSize::new(w as f64 / scale, h as f64 / scale))
+            .ok();
+    }
+    #[cfg(windows)]
+    {
+        // Single SetWindowPos so Win32/Tauri applies the geometry (and the
+        // resulting WM_DPICHANGED) before the webview relayouts.
+        if let Ok(hwnd) = window.hwnd() {
+            crate::win32::position_window_on_monitor(hwnd.0 as isize, x, y, w, h);
+        } else {
+            // Match `setup_overlay_size`: resize before repositioning so the
+            // move is not clamped by the old window size.
+            window
+                .set_size(tauri::PhysicalSize::new(w, h.saturating_sub(1)))
+                .ok();
+            window.set_position(tauri::PhysicalPosition::new(x, y)).ok();
+        }
+    }
+
+    #[cfg(not(any(windows, target_os = "macos")))]
+    {
+        let _ = (&window, x, y, w, h);
+        log_backend_event(
+            state,
+            "session",
+            "whiteboard boundaryless unsupported on this platform",
+            None,
+            "warn",
+        );
+    }
+
+    #[cfg(any(windows, target_os = "macos"))]
+    {
+        // The cursor was confined to a single monitor in drawing mode; a canvas
+        // that spans every monitor must not clip the pointer to just one of them.
+        monitor::suspend_drawing_cursor_clip();
+        notify_overlay_geometry_changed(app);
+
+        log_backend_event(
+            state,
+            "session",
+            "whiteboard boundaryless enabled",
+            Some(serde_json::json!({
+                "virtualDesktop": { "x": x, "y": y, "width": w, "height": h },
+            })),
+            "info",
+        );
+    }
+}
+
 const TOOLBAR_WIDTH: f64 = 340.0;
 const TOOLBAR_PANEL_WIDTH: f64 = 320.0;
 /// Compact standalone panel height measured from live DOM (`.overlay-panel-surface`).
@@ -384,12 +511,18 @@ pub fn position_toolbar_at(app: &AppHandle, x: f64, y: f64, panel_height: Option
     let Some(window) = app.get_webview_window("toolbar") else {
         return;
     };
-    let bounds = monitor::get_overlay_monitor_logical_bounds(app);
     let requested_x = x;
     let requested_y = y;
     let panel_h = panel_height
         .filter(|h| *h >= 64.0)
         .unwrap_or_else(|| toolbar_panel_height_logical(&window, TOOLBAR_PANEL_HEIGHT_COMPACT));
+    // Clamp into the monitor containing the panel anchor (its center): under
+    // the boundaryless whiteboard the overlay spans several monitors, and its
+    // `current_monitor` can differ from the pointer's monitor.
+    let center_x = x + TOOLBAR_PANEL_WIDTH / 2.0;
+    let center_y = y + panel_h / 2.0;
+    let bounds = monitor::monitor_logical_bounds_containing(app, center_x, center_y)
+        .or_else(|| monitor::get_overlay_monitor_logical_bounds(app));
     let (x, y) = if let Some(ref bounds) = bounds {
         monitor::clamp_logical_position_to_monitor(
             x,
@@ -811,10 +944,10 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn windows_raise_toolbar_uses_win32_topmost_reorder() {
-        assert!(
-            cfg!(windows),
-            "Windows must compile the SetWindowPos topmost reorder block"
-        );
+        // Compile-time invariant: evaluated in a const block so clippy's
+        // `assertions_on_constants` does not flag the runtime assert. The test
+        // only exists so CI executes it on Windows runners.
+        const { assert!(cfg!(windows)) };
     }
 
     #[test]

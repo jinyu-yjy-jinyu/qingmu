@@ -90,6 +90,11 @@ pub fn get_overlay_monitor_logical_bounds(
 }
 
 #[tauri::command]
+pub fn get_pointer_anchor_info(app: AppHandle) -> Option<crate::monitor::PointerAnchorInfo> {
+    crate::monitor::get_pointer_anchor_info(&app)
+}
+
+#[tauri::command]
 pub fn is_pointer_over_toolbar_panel(app: AppHandle) -> bool {
     crate::overlay::is_pointer_over_toolbar_panel(&app)
 }
@@ -287,6 +292,20 @@ pub fn set_whiteboard_mode(state: tauri::State<'_, AppState>, active: bool) {
     *lock_or_recover(&state.whiteboard_mode) = active;
 }
 
+/// Resize the overlay window for the borderless whiteboard.
+///
+/// The preference itself lives in `GeneralConfig::whiteboard_boundaryless`;
+/// this only applies it, because only the frontend knows when the whiteboard is
+/// actually active.
+#[tauri::command]
+pub fn set_whiteboard_boundaryless(
+    app: AppHandle,
+    state: tauri::State<'_, AppState>,
+    active: bool,
+) {
+    crate::overlay::set_overlay_boundaryless(&app, &state, active);
+}
+
 #[tauri::command]
 pub fn set_toolbar_visible(app: AppHandle, visible: bool) {
     crate::set_toolbar_window_visible(&app, visible);
@@ -426,7 +445,6 @@ mod tests {
 
     #[test]
     fn open_url_allowlist_permits_known_destinations() {
-
         assert!(is_allowed_open_url("https://lightcurtain.cn/help.html"));
     }
 
@@ -434,7 +452,9 @@ mod tests {
     fn open_url_allowlist_blocks_untrusted_destinations() {
         assert!(!is_allowed_open_url("https://example.com/"));
 
-        assert!(!is_allowed_open_url("https://lightcurtain.cn.evil.com/help"));
+        assert!(!is_allowed_open_url(
+            "https://lightcurtain.cn.evil.com/help"
+        ));
         assert!(!is_allowed_open_url("http://lightcurtain.cn/help.html"));
     }
 }
