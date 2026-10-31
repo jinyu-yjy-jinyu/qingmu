@@ -18,7 +18,7 @@ use crate::overlay;
 
 const LOG_TAIL_BYTES: u64 = 96 * 1024;
 const MAX_DIAGNOSTIC_EVENTS: usize = 500;
-const GITHUB_ISSUE_REPO: &str = "";
+const GITHUB_ISSUE_REPO: &str = "https://github.com/jinyu-yjy-jinyu/qingmu/issues/new";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -331,8 +331,8 @@ pub async fn open_github_issue_report(
     let bundle = build_bundle(&app, &state, description)?;
     let body = issue_body_from_bundle(&bundle);
     let url = github_issue_url(&title, &body);
-    if !url.is_empty() {
-        return Err(AppError::Other("URL not allowed".into()));
+    if url.is_empty() {
+        return Err(AppError::Other("Failed to build issue URL".into()));
     }
     app.opener()
         .open_url(&url, None::<&str>)

@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::io::Write;
+use std::path::Path;
 use std::sync::{Mutex, MutexGuard};
 use tauri::{AppHandle, Manager};
 use tracing::{info, warn};
@@ -474,11 +476,40 @@ pub fn apply_autostart_preference(app: &AppHandle, state: &AppState, enabled: bo
     save_config(app, &cfg);
 }
 
+/// Write `contents` to `path` atomically: a sibling temp file is flushed to
+/// disk and then renamed over the destination. A crash mid-write leaves the
+/// previous config intact instead of a truncated JSON file.
+fn write_atomic(path: &Path, contents: &[u8]) -> std::io::Result<()> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| std::io::Error::other("config path has no parent"))?;
+    fs::create_dir_all(parent)?;
+    let tmp = parent.join(format!(
+        ".{}.{}.tmp",
+        path.file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("config.json"),
+        std::process::id()
+    ));
+    {
+        let mut file = fs::File::create(&tmp)?;
+        file.write_all(contents)?;
+        file.sync_all()?;
+    }
+    match fs::rename(&tmp, path) {
+        Ok(()) => Ok(()),
+        Err(err) => {
+            let _ = fs::remove_file(&tmp);
+            Err(err)
+        }
+    }
+}
+
 pub fn save_config(app: &AppHandle, config: &AppConfig) {
     let path = config_path(app);
     match serde_json::to_string_pretty(config) {
         Ok(json) => {
-            if let Err(e) = fs::write(&path, json) {
+            if let Err(e) = write_atomic(&path, json.as_bytes()) {
                 warn!("Failed to write config to {}: {}", path.display(), e);
             }
         }
@@ -1087,5 +1118,32 @@ mod tests {
             parsed.shortcuts.start_annotation_screen,
             config.shortcuts.start_annotation_screen
         );
+    }
+
+    #[test]
+    fn write_atomic_replaces_existing_file() {
+        let dir = std::env::temp_dir().join(format!(
+            "lightcurtain-config-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("config.json");
+
+        write_atomic(&path, b"{\"version\":1}").unwrap();
+        write_atomic(&path, b"{\"version\":2}").unwrap();
+
+        assert_eq!(fs::read_to_string(&path).unwrap(), "{\"version\":2}");
+        let leftovers: Vec<_> = fs::read_dir(&dir)
+            .unwrap()
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| entry.file_name().to_string_lossy().ends_with(".tmp"))
+            .collect();
+        assert!(leftovers.is_empty(), "temp files should be renamed away");
+
+        fs::remove_dir_all(&dir).ok();
     }
 }

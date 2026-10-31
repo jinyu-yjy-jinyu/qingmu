@@ -1,15 +1,26 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { getVersion } from '@tauri-apps/api/app'
 import { useI18n } from '../../i18n'
 import { resolvePortableMode } from '../../utils/portable'
 
 const { t } = useI18n()
 
 const portableMode = ref<boolean | null>(null)
+const version = ref('')
+
+const GITHUB_URL = 'https://github.com/jinyu-yjy-jinyu/qingmu'
+const SPONSOR_URL = 'https://afdian.com/a/markeron'
+const FEEDBACK_URL = 'https://github.com/jinyu-yjy-jinyu/qingmu/issues/new'
 
 onMounted(async () => {
   portableMode.value = await resolvePortableMode()
+  try {
+    version.value = await getVersion()
+  } catch (error) {
+    console.error('Failed to read app version:', error)
+  }
 })
 
 async function openUrl(url: string) {
@@ -47,16 +58,20 @@ async function openUrl(url: string) {
       <div class="w-full max-w-85 shrink-0">
         <div class="settings-card w-full overflow-hidden">
           <div class="flex items-center justify-between px-4 py-3 ui-divider-b settings-row-hover transition-colors">
+            <span class="settings-text-row-key">{{ t('about.version') }}</span>
+            <span class="settings-text-value font-mono">{{ version || '—' }}</span>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3 ui-divider-b settings-row-hover transition-colors">
             <span class="settings-text-row-key">{{ t('about.license') }}</span>
             <span class="settings-text-value">暂未开源</span>
           </div>
           <button
             class="w-full flex items-center justify-between px-4 py-3 ui-divider-b settings-row-hover-strong transition-colors cursor-pointer bg-transparent border-x-0 border-t-0"
-            @click="openUrl('')"
+            @click="openUrl(GITHUB_URL)"
           >
             <span class="settings-text-row-key">GitHub</span>
             <span class="flex items-center gap-1.5 settings-text-accent-link">
-              暂未开源
+              jinyu-yjy-jinyu/qingmu
               <svg
                 class="w-3 h-3 opacity-50"
                 viewBox="0 0 24 24"
@@ -74,7 +89,7 @@ async function openUrl(url: string) {
           </button>
           <button
             class="w-full flex items-center justify-between px-4 py-3 ui-divider-b settings-row-hover-strong transition-colors cursor-pointer bg-transparent border-x-0 border-t-0"
-            @click="openUrl('')"
+            @click="openUrl(SPONSOR_URL)"
           >
             <span class="settings-text-row-key">{{ t('about.sponsor') }}</span>
             <span class="flex items-center gap-1.5 settings-text-accent-link">
@@ -96,7 +111,7 @@ async function openUrl(url: string) {
           </button>
           <button
             class="w-full flex items-center justify-between px-4 py-3 settings-row-hover-strong transition-colors cursor-pointer bg-transparent border-none"
-            @click="openUrl('')"
+            @click="openUrl(FEEDBACK_URL)"
           >
             <span class="settings-text-row-key">{{ t('about.feedback') }}</span>
             <svg

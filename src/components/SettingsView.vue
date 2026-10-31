@@ -15,6 +15,7 @@ import { isMacOS } from '../utils/platform'
 import { useI18n, syncLocaleFromConfig } from '../i18n'
 import GeneralTab from './settings/GeneralTab.vue'
 
+import DiagnosticsTab from './settings/DiagnosticsTab.vue'
 import AboutTab from './settings/AboutTab.vue'
 import SettingsSidebarFooter from './settings/SettingsSidebarFooter.vue'
 import appIcon from '../assets/app-icon-84.png'
@@ -76,9 +77,11 @@ const helpTools = [
 ] as const
 
 const hashTab = window.location.hash.split('/')[1]
-const activeTab = ref(hashTab && ['general', 'shortcuts', 'help', 'about'].includes(hashTab) ? hashTab : 'general')
+const activeTab = ref(
+  hashTab && ['general', 'shortcuts', 'help', 'diagnostics', 'about'].includes(hashTab) ? hashTab : 'general',
+)
 
-const tabIds = ['general', 'shortcuts', 'help', 'about'] as const
+const tabIds = ['general', 'shortcuts', 'help', 'diagnostics', 'about'] as const
 const tabs = computed(() => tabIds.map((id) => ({ id, label: t(`settings.tabs.${id}`) })))
 
 const shortcuts = reactive<AppConfig['shortcuts']>({
@@ -383,6 +386,18 @@ onUnmounted(() => {
             <circle cx="12" cy="12" r="10" />
             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
             <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <svg
+            v-else-if="tab.id === 'diagnostics'"
+            class="w-3.5 h-3.5 shrink-0 opacity-70"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
           </svg>
           <svg
             v-else-if="tab.id === 'about'"
@@ -756,6 +771,8 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
+
+      <DiagnosticsTab v-else-if="activeTab === 'diagnostics'" />
 
       <AboutTab v-else-if="activeTab === 'about'" />
     </div>
